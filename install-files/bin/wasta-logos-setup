@@ -1,0 +1,223 @@
+#!/bin/bash
+
+# ==============================================================================
+# Logos Wine Setup
+#   - Patch Wine
+#   - Create Logos Wine Prefix
+#   - Install .NET 4.7.2 in Logos Wine Prefix
+#   - Install Logos
+#
+#   2019-09-28 rik: initial script
+#
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Ensure script running as regular user
+# ------------------------------------------------------------------------------
+if [ $(id -u) -eq 0 ]
+then
+    echo "wasta-msoffice-setup started as root user."
+    echo "No processing done.  Exiting...."
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Function: createPrefix
+#
+#   Create Logos Wine Prefix
+# ------------------------------------------------------------------------------
+createPrefix () {
+    # remove PREFIX if found
+    rm -rf $PREFIX
+
+    cleanupPrefix
+
+    # copy in winetricks cache
+    rsync -avt $DIR/resources/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
+        --height=150 --width=450 --progress --pulsate --auto-close \
+        --window-icon=wasta-linux --title="Copying Winetricks Cache" \
+        --text="Copying Winetricks Cache...")
+
+    # create prefix
+    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot | tee >(zenity \
+        ---height=150 --width=450 --progress --pulsate --auto-close \
+        --window-icon=wasta-linux --title="Creating Wine Prefix" \
+        --text="Creating Wine Prefix... \n\n")
+    OUTNUM=$?
+    if [ "$OUTNUM" -ne 0 ];
+    then
+        # some failure: exit
+        errorExit "<b>Setup of Logos Wine Prefix failed!</b>"
+    fi
+
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q dotnet472 | tee >(zenity \
+        --height=150 --width=450 --progress --pulsate --auto-close \
+        --window-icon=wasta-linux --title="Installing .NET 4.7.2" \
+        --text="Installing .NET 4.7.2... \n
+<i>Please be patient: this could take up to 30 minutes</i>\n")
+    OUTNUM=$?
+    if [ "$OUTNUM" -ne 0 ];
+    then
+        # some failure: exit
+        errorExit "<b>.NET 4.7.2 install in Logos Wine Prefix failed!</b>"
+    fi
+
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q corefonts | tee >(zenity \
+        --height=150 --width=450 --progress --pulsate --auto-close \
+        --window-icon=wasta-linux --title="Installing CoreFonts" \
+        --text="Installing Corefonts...")
+    OUTNUM=$?
+    if [ "$OUTNUM" -ne 0 ];
+    then
+        # some failure: exit
+        errorExit "<b>Corefonts install in Logos Wine Prefix failed!</b>"
+    fi
+
+    # set fontsmoothing
+    # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
+    WINEPREFIX=$PREFIX winetricks settings fontsmooth=rgb
+
+    cleanupPrefix
+}
+
+errorExit () {
+    zenity --error --no-wrap --height=200 \
+        --title="wasta-logos-setup: Error" \
+        --window-icon=/usr/share/icons/hicolor/64x64/apps/wasta-linux.png \
+        --text="$1 \n
+<i>wasta-logos-setup will now exit.</i>" >/dev/null 2>&1
+    exit 1
+}
+
+cleanupPrefix () {
+    # remove desktop entries referencing $PREFIX.
+    # note: grep --null returns null separated list to handle space in filenames
+    # note: xargs -0 to handle null separated items
+    grep -r -l --null "$PREFIX" "$HOME/.local/share/applications" \
+        | xargs -0 rm >/dev/null 2>&1
+}
+
+# ------------------------------------------------------------------------------
+# Main Processing
+# ------------------------------------------------------------------------------
+# wasta-logos-setup directory (for resources)
+DIR=/usr/share/wasta-logos-setup
+PREFIX=/home/$USER/.wine-logos
+
+zenity --question --no-wrap --height=200 --width=500 \
+    --title="wasta-logos-setup" \
+    --window-icon=wasta-linux \
+    --text="<b>Do you want to install Logos using Wine?</b>\n
+<b>Processing Summary:</b>
+   * Ensure Wine patched for Logos compatibility <i>(optional)</i>
+   * Create a 'Logos Wine Prefix'
+   * Install .NET 4.7.2
+   * Install Logos"
+if [ "$?" -ne 0 ];
+then
+    # User didn't said yes: exit
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Optionally patch kernelbase.dll (if an administrator)
+# ------------------------------------------------------------------------------
+
+if ! [ -e /opt/wine-devel/lib/wine/kernelbase.dll-orig ];
+then 
+    # prompt for running wasta-layout-system
+    zenity --question --title "Patch Wine?" \
+        --no-wrap --height=150 --width=450 \
+        --window-icon=/usr/share/icons/hicolor/64x64/apps/wasta-linux.png \
+        --text="<b>Patch Wine for Logos compatibility?</b>\n
+<i>NOTE: you will need to provide an administrative password</i>\n"
+PATCH_WINE=$?
+
+    if [ "$PATCH_WINE" == 0 ];
+    then
+        pkexec $DIR/wasta-logos-setup-postinst.sh
+        RETURN=$?
+        if [ "$RETURN" -ne 0 ];
+        then
+            # didn't return clean from postinst: get outta here!
+            exit 1
+        fi
+    fi
+fi
+
+# ------------------------------------------------------------------------------
+# Setup Logos Prefix and install Logos
+# ------------------------------------------------------------------------------
+
+if [ -d "$PREFIX" ];
+then
+    # Wine PREFIX exists, ask user if they want to overwrite it or update it
+    zenity --question --no-wrap --height=200 --width=500 \
+        --title="wasta-logos-setup" \
+        --window-icon=wasta-linux \
+        --text="<b>Remove existing Logos Wine Prefix?</b>\n
+<i>The folder <u>'$PREFIX'</u> already exists.  Do you want to
+delete it in order to re-setup a new Logos Wine Prefix?</i>\n"
+
+    if [ "$?" -eq 0 ];
+    then
+        # User said yes: re-create PREFIX
+        createPrefix
+    fi
+else
+    # No Wine PREFIX: prompt user
+    zenity --question --no-wrap --height=200 --width=500 \
+        --title="wasta-logos-setup" \
+        --window-icon=wasta-linux \
+        --text="<b>Setup Logos Wine Prefix?</b>\n
+<i>Do you want to setup a new Logos Wine Prefix?</i>\n"
+
+    if [ "$?" -eq 0 ];
+    then
+        # User said yes: create PREFIX
+        createPrefix
+    else
+        # exit
+        exit 0
+    fi
+fi
+
+if [ -d "$PREFIX" ];
+then
+    zenity --info --no-wrap --height=200 --width=500 \
+        --title="wasta-logos-setup" --ok-label="Continue" \
+        --window-icon=wasta-linux \
+        --text="<b>Ready to install Logos</b>\n
+<i>You will need to to locate the <u>'Logos-x86.msi'</u> installation file</i>\n"
+
+    INSTALL_FILE=$(zenity --file-selection \
+        --window-icon=wasta-linux \
+        --title="Select your Logos Installation File")
+    echo $INSTALL_FILE
+    if [[ "${INSTALL_FILE,,}" == *"/logos"*".msi" ]]
+    then
+        WINEPREFIX=$PREFIX msiexec /i "$INSTALL_FILE"
+        OUTNUM=$?
+        if [ "$OUTNUM" -ne 0 ];
+        then
+            # some failure: exit
+            errorExit "<b>Logos installation failed!</b>"
+        fi
+
+        # patch desktop file to use LC_ALL fix from John
+
+        zenity --info --no-wrap --height=200 \
+            --title="wasta-logos-setup: Complete" \
+            --window-icon=wasta-linux \
+            --text="<b>Logos setup complete!</b> \n
+<i>Find 'Logos Bible Software' in the <u>Main Menu</u>
+under the <u>'Wine'</u> category</i>"
+    else
+        # not a valid 'logos*.msi' file: exit
+        errorExit "<b>Selected file:</b> \n
+$INSTALL_FILE \n
+<b>is not a valid Logos Installation file!</b>"
+    fi
+fi
+
+exit 0

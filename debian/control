@@ -1,0 +1,16 @@
+Source: wasta-logos-setup
+Section: utils
+Priority: optional
+Maintainer: Rik Shaw <rikshaw76@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.5
+Homepage: https://github.com/wasta-linux/wasta-logos-setup
+
+Package: wasta-logos-setup
+Architecture: all
+Depends: rsync, winehq-devel, zenity, ${shlibs:Depends}, ${misc:Depends}
+Description: Setup Logos via WINE
+ Patches wine for Logos compatibility, sets up Logos wine prefix,
+ installs .NET 4.7.2 in the wine prefix, and installs Logos.
+ .
+ Needs to be run for each user wanting Logos.
