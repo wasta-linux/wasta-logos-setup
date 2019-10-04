@@ -179,8 +179,10 @@ progressCheck () {
 # wasta-logos-setup directory (for resources)
 DIR=/usr/share/wasta-logos-setup
 PREFIX=/home/$USER/.wine-logos
-LOGOS_DOWNLOAD_FILE=https://downloads.logoscdn.com/LBS8/Installer/8.7.0.0042/Logos-x86.msi
-LOGOS_MD5=b6bd8db7f3cf81bd55ef6c71fdbd4000
+
+#version 8.8.0.0036 added on 10/3/2019
+LOGOS_DOWNLOAD_FILE=https://downloads.logoscdn.com/LBS8/Installer/8.8.0.0039/Logos-x86.msi
+LOGOS_MD5=bc47826112cef8d6a35291240b80f198
 
 zenity --question --no-wrap --height=200 --width=500 \
     --title="wasta-logos-setup" \
