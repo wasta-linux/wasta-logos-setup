@@ -98,6 +98,10 @@ setupPrefix () {
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
     WINEPREFIX=$PREFIX winetricks settings fontsmooth=rgb
 
+    # prevent window manager from decorating windows (attempting to reduce
+    #   graphical glitching
+    WINEPREFIX=$PREFIX winetricks settings windowmanagerdecorated=n
+
     cleanupPrefix
 }
 
@@ -354,7 +358,8 @@ Proceeding with installation..."
 $INSTALL_FILE"
         fi
 
-        # TODO: patch desktop file to use LC_ALL fix from John
+        # add LC_ALL=C
+        sed -i -e "s@\(Software.lnk$\)@\1 LC_ALL=C@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         zenity --info --no-wrap --height=200 \
             --title="wasta-logos-setup: Complete" \
