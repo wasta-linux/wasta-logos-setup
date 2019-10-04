@@ -1,3 +1,10 @@
+wasta-logos-setup (0.1.2) bionic; urgency=medium
+
+  * wasta-logos-setup: adding logos download possibility and
+    additional error processing
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Fri, 04 Oct 2019 15:22:20 +0300
+
 wasta-logos-setup (0.1.1) bionic; urgency=medium
 
   * debian/control: reverted depends to winehq-devel

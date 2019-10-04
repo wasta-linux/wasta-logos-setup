@@ -8,6 +8,7 @@
 #   - Install Logos
 #
 #   2019-09-28 rik: initial script
+#   2019-10-04 rik: adding logos download option and additional error processing
 #
 # ==============================================================================
 
@@ -22,54 +23,74 @@ then
 fi
 
 # ------------------------------------------------------------------------------
-# Function: createPrefix
+# Function: setupPrefix
 #
-#   Create Logos Wine Prefix
+#   Setup Prefix for Logos
 # ------------------------------------------------------------------------------
-createPrefix () {
-    # remove PREFIX if found
-    rm -rf $PREFIX
-
+setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
     rsync -avt $DIR/resources/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=wasta-linux --title="Copying Winetricks Cache" \
+        --window-icon=$DIR/resources/wasta-linux.png \
+        --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache...")
 
-    # create prefix
-    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot | tee >(zenity \
+    # setup prefix
+    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot | zenity \
         ---height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=wasta-linux --title="Creating Wine Prefix" \
-        --text="Creating Wine Prefix... \n\n")
-    OUTNUM=$?
-    if [ "$OUTNUM" -ne 0 ];
+        --window-icon=$DIR/resources/wasta-linux.png \
+        --title="Setting up Wine Prefix" \
+        --text="Setting up Wine Prefix... \n\n" &
+    # get zenity process id
+    PID_ZENITY=${!}
+
+    # get firstly created process id, which is running parallel to zenity
+    PID_PROCESS=$(pgrep -o -P $$)
+
+    progressCheck $PID_ZENITY $PID_PROCESS
+    if [ "$?" -eq 99 ];
     then
+        # zenity canceled, Prefix setup didn't complete
         # some failure: exit
         errorExit "<b>Setup of Logos Wine Prefix failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q dotnet472 | tee >(zenity \
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q dotnet472 | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=wasta-linux --title="Installing .NET 4.7.2" \
+        --window-icon=$DIR/resources/wasta-linux.png \
+        --title="Installing .NET 4.7.2" \
         --text="Installing .NET 4.7.2... \n
-<i>Please be patient: this could take up to 30 minutes</i>\n")
-    OUTNUM=$?
-    if [ "$OUTNUM" -ne 0 ];
+<i>Please be patient: this could take up to 30 minutes</i>\n" &
+    # get zenity process id
+    PID_ZENITY=${!}
+
+    # get firstly created process id, which is running parallel to zenity
+    PID_PROCESS=$(pgrep -o -P $$)
+
+    progressCheck $PID_ZENITY $PID_PROCESS
+    if [ "$?" -eq 99 ];
     then
-        # some failure: exit
+        # zenity canceled, .NET install didn't complete
         errorExit "<b>.NET 4.7.2 install in Logos Wine Prefix failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q corefonts | tee >(zenity \
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q corefonts | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=wasta-linux --title="Installing CoreFonts" \
-        --text="Installing Corefonts...")
-    OUTNUM=$?
-    if [ "$OUTNUM" -ne 0 ];
+        --window-icon=$DIR/resources/wasta-linux.png \
+        --title="Installing CoreFonts" \
+        --text="Installing Corefonts... \n" &
+    # get zenity process id
+    PID_ZENITY=${!}
+
+    # get firstly created process id, which is running parallel to zenity
+    PID_PROCESS=$(pgrep -o -P $$)
+
+    progressCheck $PID_ZENITY $PID_PROCESS
+    if [ "$?" -eq 99 ];
     then
-        # some failure: exit
+        # zenity canceled, Corefonts install didn't complete
         errorExit "<b>Corefonts install in Logos Wine Prefix failed!</b>"
     fi
 
@@ -80,15 +101,25 @@ createPrefix () {
     cleanupPrefix
 }
 
+# ------------------------------------------------------------------------------
+# Function: errorExit
+#
+#   exit script with passed message
+# ------------------------------------------------------------------------------
 errorExit () {
     zenity --error --no-wrap --height=200 \
         --title="wasta-logos-setup: Error" \
-        --window-icon=/usr/share/icons/hicolor/64x64/apps/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.png \
         --text="$1 \n
 <i>wasta-logos-setup will now exit.</i>" >/dev/null 2>&1
     exit 1
 }
 
+# ------------------------------------------------------------------------------
+# Function: cleanupPrefix
+#
+#   various cleanup items for the Logos wine prefix
+# ------------------------------------------------------------------------------
 cleanupPrefix () {
     # remove desktop entries referencing $PREFIX.
     # note: grep --null returns null separated list to handle space in filenames
@@ -98,15 +129,58 @@ cleanupPrefix () {
 }
 
 # ------------------------------------------------------------------------------
-# Main Processing
+# Function: progressCheck
+#
+#   Check on process launched in parallel with zenity. If zenity is canceled,
+#   then kill process.
 # ------------------------------------------------------------------------------
+progressCheck () {
+    echo
+    echo "Watching zenity process. If it is canceled then kill PID_PROCESS: $PID_PROCESS"
+    echo
+
+    # loop to check that progress dialog has not been cancelled
+    while [ "$PID_ZENITY" != "" ]
+    do
+        # check if zenity PID is still there (dialog box still open)
+        PID_ZENITY=$(ps h -o pid --pid ${PID_ZENITY} | xargs)
+
+        # sleep for 2 second
+        sleep 2
+    done
+
+    # if other task still there, kill it
+    ps "${PID_PROCESS}"
+    if [ "$?" -eq 0 ];
+    then
+        # parallel process STILL FOUND: user canceled so kill it!
+        echo
+        echo "Zenity process ended (canceled) before parallel process: Killing PID_PROCESS: $PID_PROCESS"
+        echo
+        kill -9 ${PID_PROCESS}
+        return 99
+    else
+        # parallel process NOT found after zenity completed: both completed
+        echo
+        echo "Zenity process and parallel process both ended: success"
+        echo
+        return 0
+    fi
+}
+
+# ==============================================================================
+# Main Processing
+# ==============================================================================
+
 # wasta-logos-setup directory (for resources)
 DIR=/usr/share/wasta-logos-setup
 PREFIX=/home/$USER/.wine-logos
+LOGOS_DOWNLOAD_FILE=https://downloads.logoscdn.com/LBS8/Installer/8.7.0.0042/Logos-x86.msi
+LOGOS_MD5=b6bd8db7f3cf81bd55ef6c71fdbd4000
 
 zenity --question --no-wrap --height=200 --width=500 \
     --title="wasta-logos-setup" \
-    --window-icon=wasta-linux \
+    --window-icon=$DIR/resources/wasta-linux.png \
     --text="<b>Do you want to install Logos using Wine?</b>\n
 <b>Processing Summary:</b>
    * Ensure Wine patched for Logos compatibility <i>(optional)</i>
@@ -128,7 +202,7 @@ then
     # prompt for running wasta-layout-system
     zenity --question --title "Patch Wine?" \
         --no-wrap --height=150 --width=450 \
-        --window-icon=/usr/share/icons/hicolor/64x64/apps/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.png \
         --text="<b>Patch Wine for Logos compatibility?</b>\n
 <i>NOTE: you will need to provide an administrative password</i>\n"
 PATCH_WINE=$?
@@ -154,28 +228,29 @@ then
     # Wine PREFIX exists, ask user if they want to overwrite it or update it
     zenity --question --no-wrap --height=200 --width=500 \
         --title="wasta-logos-setup" \
-        --window-icon=wasta-linux \
+        --window-icon=$DIR/resources/wasta-linux.png \
         --text="<b>Remove existing Logos Wine Prefix?</b>\n
 <i>The folder <u>'$PREFIX'</u> already exists.  Do you want to
 delete it in order to re-setup a new Logos Wine Prefix?</i>\n"
 
     if [ "$?" -eq 0 ];
     then
-        # User said yes: re-create PREFIX
-        createPrefix
+        # remove PREFIX
+        rm -rf $PREFIX
     fi
+    setupPrefix
 else
     # No Wine PREFIX: prompt user
     zenity --question --no-wrap --height=200 --width=500 \
         --title="wasta-logos-setup" \
-        --window-icon=wasta-linux \
+        --window-icon=$DIR/resources/wasta-linux.png \
         --text="<b>Setup Logos Wine Prefix?</b>\n
 <i>Do you want to setup a new Logos Wine Prefix?</i>\n"
 
     if [ "$?" -eq 0 ];
     then
-        # User said yes: create PREFIX
-        createPrefix
+        # User said yes: setup PREFIX
+        setupPrefix
     else
         # exit
         exit 0
@@ -184,39 +259,112 @@ fi
 
 if [ -d "$PREFIX" ];
 then
-    zenity --info --no-wrap --height=200 --width=500 \
-        --title="wasta-logos-setup" --ok-label="Continue" \
-        --window-icon=wasta-linux \
-        --text="<b>Ready to install Logos</b>\n
-<i>You will need to to locate the <u>'Logos-x86.msi'</u> installation file</i>\n"
+    INSTALL_FILE=""
+    if ! [ -e "$HOME/Downloads/Logos-x86.msi" ];
+    then
+        zenity --question --no-wrap --height=200 --width=500 \
+            --title="Download Logos?" --ok-label="Continue" \
+            --window-icon=$DIR/resources/wasta-linux.png \
+            --text="'Logos-x86.msi' wasn't found in your Downloads folder.\n
+<b>Download Logos-x86.msi from the internet?</b>\n
+<i>If you answer 'no' then you will be prompted to locate your 'Logos-x86.msi' file.</i>\n"
 
-    INSTALL_FILE=$(zenity --file-selection \
-        --window-icon=wasta-linux \
-        --title="Select your Logos Installation File")
-    echo $INSTALL_FILE
-    if [[ "${INSTALL_FILE,,}" == *"/logos"*".msi" ]]
+        if [ "$?" -eq 0 ];
+        then
+            read -p "here i am"
+            # User said yes: Download Logos-x86.msi
+            # -t: retry 5 times
+            # -c: continue (resume broken download)
+            wget -c -N -t 5 -O $HOME/Downloads/Logos-x86.msi $LOGOS_DOWNLOAD_FILE | zenity \
+                --height=150 --width=450 --progress --pulsate --auto-close \
+                --window-icon=$DIR/resources/wasta-linux.png \
+                --title="Downloading Logos Installer" \
+                --text="Logos-x86.msi is being downloaded...\n\n" &
+
+            # get zenity process id
+            PID_ZENITY=${!}
+
+            # get firstly created process id, which is running parallel to zenity
+            PID_PROCESS=$(pgrep -o -P $$)
+
+            progressCheck $PID_ZENITY $PID_PROCESS
+            if [ "$?" -eq 99 ];
+            then
+                # zenity canceled, download didn't complete
+                # didn't exist previously so delete if found
+                rm -f "$HOME/Downloads/Logos-x86.msi"
+                zenity --info --no-wrap --height=200 \
+                    --title="Download Failed" \
+                    --window-icon=$DIR/resources/wasta-linux.png \
+                    --text="<b>Logos-x86.msi Download failed:</b>\n
+You will now be prompted for an existing Logos-x86.msi file."
+            else
+                #check md5
+                MD5_CHECK=($(md5sum "$HOME/Downloads/Logos-x86.msi"))
+                echo "MD5_CHECK: $MD5_CHECK"
+                echo "LOGOS_MD5: $LOGOS_MD5"
+                if [ "$MD5_CHECK" == "$LOGOS_MD5" ];
+                then
+                    INSTALL_FILE="$HOME/Downloads/Logos-x86.msi"
+                else
+                    # didn't exist previously so delete if found
+                    rm -f "$HOME/Downloads/Logos-x86.msi"
+                    zenity --info --no-wrap --height=200 \
+                    --title="Checksum Failed" \
+                    --window-icon=$DIR/resources/wasta-linux.png \
+                    --text="<b>Logos-x86.msi checksum failed:</b>\n
+You will now be prompted for an existing Logos-x86.msi file."
+                fi
+            fi
+        fi
+
+        if [ "$INSTALL_FILE" == "" ];
+        then
+            # DON'T check md5 because could be a newer version?
+            INSTALL_FILE=$(zenity --file-selection \
+                --window-icon=$DIR/resources/wasta-linux.png \
+                --title="Select your Logos 32-bit Installation File")
+            OUTNUM=$?
+            if [ "$OUTNUM" -ne 0 ];
+            then
+                errorExit "File Dialog cancelled"
+            fi
+        fi
+    else
+        # DON'T check md5 because could be a newer version?
+        INSTALL_FILE="$HOME/Downloads/Logos-x86.msi"
+        zenity --info --no-wrap --height=200 \
+            --title="Logos Installer Found" \
+            --window-icon=$DIR/resources/wasta-linux.png \
+            --text="<b>Logos-x86.msi</b> was found in your <b>Downloads</b> folder.\n
+Proceeding with installation..."
+    fi
+
+    echo "Install file: $INSTALL_FILE"
+
+    if [ "$INSTALL_FILE" ];
     then
         WINEPREFIX=$PREFIX msiexec /i "$INSTALL_FILE"
         OUTNUM=$?
         if [ "$OUTNUM" -ne 0 ];
         then
             # some failure: exit
-            errorExit "<b>Logos installation failed!</b>"
+            errorExit "<b>Logos installation failed!</b>\n
+<i>Some error encountered with installation file:</i>\n
+$INSTALL_FILE"
         fi
 
-        # patch desktop file to use LC_ALL fix from John
+        # TODO: patch desktop file to use LC_ALL fix from John
 
         zenity --info --no-wrap --height=200 \
             --title="wasta-logos-setup: Complete" \
-            --window-icon=wasta-linux \
-            --text="<b>Logos setup complete!</b> \n
+            --window-icon=$DIR/resources/wasta-linux.png \
+            --text="<b>Logos setup complete!</b>\n
 <i>Find 'Logos Bible Software' in the <u>Main Menu</u>
 under the <u>'Wine'</u> category</i>"
     else
         # not a valid 'logos*.msi' file: exit
-        errorExit "<b>Selected file:</b> \n
-$INSTALL_FILE \n
-<b>is not a valid Logos Installation file!</b>"
+        errorExit "<b>No valid Logos-x86.msi found.</b>"
     fi
 fi
 
