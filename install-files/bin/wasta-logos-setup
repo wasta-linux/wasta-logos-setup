@@ -98,11 +98,11 @@ setupPrefix () {
 
     # set fontsmoothing
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
-    WINEPREFIX=$PREFIX winetricks settings fontsmooth=rgb
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks settings fontsmooth=rgb
 
     # prevent window manager from decorating windows (attempting to reduce
     #   graphical glitching
-    WINEPREFIX=$PREFIX winetricks settings windowmanagerdecorated=n
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks settings windowmanagerdecorated=n
 
     cleanupPrefix
 }

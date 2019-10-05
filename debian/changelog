@@ -1,3 +1,10 @@
+wasta-logos-setup (0.1.7) bionic; urgency=medium
+
+  * wasta-logos-setup: correcting winetricks commands to reference
+    $DIR/resources/winetricks
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sat, 05 Oct 2019 16:31:20 +0300
+
 wasta-logos-setup (0.1.6) bionic; urgency=medium
 
   * debian/control: adding winehq-staging as alternate dependency
