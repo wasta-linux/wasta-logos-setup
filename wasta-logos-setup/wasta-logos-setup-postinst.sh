@@ -24,6 +24,34 @@ then
 fi
 
 # ------------------------------------------------------------------------------
+# Function: linkFile
+#
+#   link file based on $DLL_FILE and $PATCH_FILE
+#       $1: Source file (that will be symlinked)
+#       $2: Target file wanting to be replaced with symlink
+# ------------------------------------------------------------------------------
+linkFile () {
+    if [ -f "$2" ];
+    then
+        # real file at location, needs to be replaced with symlink
+        echo
+        echo "*** Backing up original file: $2"
+        echo
+        mv $2 $2-wasta
+
+        echo
+        echo "*** Making symlink $2 pointing to $1"
+        echo
+        ln -sf $1 $2
+    elif [ -L "$2" ];
+    then
+        echo
+        echo "*** Symlink already exists: $2"
+        echo
+    fi
+}
+
+# ------------------------------------------------------------------------------
 # Main Processing
 # ------------------------------------------------------------------------------
 echo
@@ -33,52 +61,56 @@ echo
 # Setup Diretory for later reference
 DIR=/usr/share/wasta-logos-setup
 
-# Patch 64-bit kernelbase.dll
-DLL_FILE=/opt/wine-devel/lib64/wine/kernelbase.dll
-if [ -e "$DLL_FILE" ];
+WINE_VERSION=$(wine --version)
+
+if [ -d /opt/wine-devel/lib/ ];
 then
-    echo
-    echo "*** Patching file: $DLL_FILE"
-    echo
+    case "$WINE_VERSION" in
+        wine-4.16)
+            # Patch wine-devel 4.16 kernelbase.dll
+            DLL_FILE=/opt/wine-devel/lib/wine/kernelbase.dll
+            PATCH_FILE=$DIR/resources/kernelbase-4-16.dll
+            linkFile $PATCH_FILE $DLL_FILE
+        ;;
 
-    # backup original dll file
-    if ! [ -e "$DLL_FILE-orig" ];
-    then
-        echo
-        echo "*** Backing up original file: $DLL_FILE"
-        echo
-        rsync -avt $DLL_FILE $DLL_FILE-orig
-    fi
+        wine-4.17)
+            # Patch wine-devel 32-bit kernelbase.dll
+            DLL_FILE=/opt/wine-devel/lib/wine/kernelbase.dll
+            PATCH_FILE=$DIR/resources/kernelbase-4-17.dll
+            linkFile $PATCH_FILE $DLL_FILE
+        ;;
 
-    rsync -avt $DIR/resources/kernelbase-64.dll $DLL_FILE
-else
-    echo
-    echo "*** File Not Found (not patched): $DLL_FILE"
-    echo
+        *)
+            echo
+            echo "*** unsupported wine-devel version: not patched"
+            echo
+        ;;
+    esac
 fi
 
-# Patch 32-bit kernelbase.dll
-DLL_FILE=/opt/wine-devel/lib/wine/kernelbase.dll
-if [ -e "$DLL_FILE" ];
+if [ -d /opt/wine-staging/lib/ ];
 then
-    echo
-    echo "*** Patching file: $DLL_FILE"
-    echo
+    case "$WINE_VERSION" in
+        wine-4.16)
+            # Patch wine-devel 4.16 kernelbase.dll
+            DLL_FILE=/opt/wine-staging/lib/wine/kernelbase.dll
+            PATCH_FILE=$DIR/resources/kernelbase-4-16.dll
+            linkFile $PATCH_FILE $DLL_FILE
+        ;;
 
-    # backup original dll file
-    if ! [ -e "$DLL_FILE-orig" ];
-    then
-        echo
-        echo "*** Backing up original file: $DLL_FILE"
-        echo
-        rsync -avt $DLL_FILE $DLL_FILE-orig
-    fi
+        wine-4.17)
+            # Patch wine-devel 32-bit kernelbase.dll
+            DLL_FILE=/opt/wine-staging/lib/wine/kernelbase.dll
+            PATCH_FILE=$DIR/resources/kernelbase-4-17.dll
+            linkFile $PATCH_FILE $DLL_FILE
+        ;;
 
-    rsync -avt $DIR/resources/kernelbase-32.dll $DLL_FILE
-else
-    echo
-    echo "*** File Not Found (not patched): $DLL_FILE"
-    echo
+        *)
+            echo
+            echo "*** unsupported wine-staging version: not patched"
+            echo
+        ;;
+    esac
 fi
 
 # ------------------------------------------------------------------------------

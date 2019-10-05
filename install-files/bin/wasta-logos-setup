@@ -31,7 +31,7 @@ setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
-    rsync -avt $DIR/resources/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
+    rsync -av $DIR/resources/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Copying Winetricks Cache" \
@@ -40,9 +40,8 @@ setupPrefix () {
     # setup prefix
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
     #   But some users are having freezing issues so I am reverting this.
-    #WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot
-    WINEPREFIX=$PREFIX WINEARCH=win32 wineboot | zenity \
-        ---height=150 --width=450 --progress --pulsate --auto-close \
+    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot | zenity \
+        --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Setting up Wine Prefix" \
         --text="Setting up Wine Prefix... \n\n" &

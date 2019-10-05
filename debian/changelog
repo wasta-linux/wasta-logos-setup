@@ -1,3 +1,11 @@
+wasta-logos-setup (0.1.6) bionic; urgency=medium
+
+  * debian/control: adding winehq-staging as alternate dependency
+  * wasta-logos-setup: modified wine patching to use symlinks
+    - Added compatibility for wine 4.16 and 4.17
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sat, 05 Oct 2019 10:31:52 +0300
+
 wasta-logos-setup (0.1.5) bionic; urgency=medium
 
   * removing DLL hack that prevented mono and gecko prompts
