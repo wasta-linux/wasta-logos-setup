@@ -1,3 +1,9 @@
+wasta-logos-setup (0.1.5) bionic; urgency=medium
+
+  * removing DLL hack that prevented mono and gecko prompts
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sat, 05 Oct 2019 08:47:47 +0300
+
 wasta-logos-setup (0.1.4) bionic; urgency=medium
 
   * updated to download Logos 8.8.0.0039 and check md5 for it

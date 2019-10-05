@@ -38,7 +38,10 @@ setupPrefix () {
         --text="Copying Winetricks Cache...")
 
     # setup prefix
-    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot | zenity \
+    # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
+    #   But some users are having freezing issues so I am reverting this.
+    #WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" wineboot
+    WINEPREFIX=$PREFIX WINEARCH=win32 wineboot | zenity \
         ---height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Setting up Wine Prefix" \
@@ -277,7 +280,6 @@ then
 
         if [ "$?" -eq 0 ];
         then
-            read -p "here i am"
             # User said yes: Download Logos-x86.msi
             # -t: retry 5 times
             # -c: continue (resume broken download)
