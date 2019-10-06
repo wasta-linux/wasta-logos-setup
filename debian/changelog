@@ -1,3 +1,10 @@
+wasta-logos-setup (0.1.8) bionic; urgency=medium
+
+  * wasta-logos-setup: add winetricks ddr=gdi to address graphical
+    glitches
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sun, 06 Oct 2019 18:30:38 +0300
+
 wasta-logos-setup (0.1.7) bionic; urgency=medium
 
   * wasta-logos-setup: correcting winetricks commands to reference

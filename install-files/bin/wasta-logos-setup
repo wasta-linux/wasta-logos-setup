@@ -9,6 +9,7 @@
 #
 #   2019-09-28 rik: initial script
 #   2019-10-04 rik: adding logos download option and additional error processing
+#   2019-10-06 rik: adding winetricks ddr=gdi to address graphical glitches
 #
 # ==============================================================================
 
@@ -100,9 +101,14 @@ setupPrefix () {
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
     WINEPREFIX=$PREFIX $DIR/resources/winetricks settings fontsmooth=rgb
 
+    # 2019-10-06 rik: not needed as ddr=gdi solves glitching
     # prevent window manager from decorating windows (attempting to reduce
     #   graphical glitching
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks settings windowmanagerdecorated=n
+    # WINEPREFIX=$PREFIX $DIR/resources/winetricks settings windowmanagerdecorated=n
+
+    #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
+    #   etc disappearing / reappearing.
+    WINEPREFIX=$PREFIX $DIR/resources/winetricks ddr=gdi
 
     cleanupPrefix
 }
