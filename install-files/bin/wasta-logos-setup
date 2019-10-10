@@ -10,6 +10,7 @@
 #   2019-09-28 rik: initial script
 #   2019-10-04 rik: adding logos download option and additional error processing
 #   2019-10-06 rik: adding winetricks ddr=gdi to address graphical glitches
+#   2019-10-10 rik: moving winetricks to /usr/local/bin
 #
 # ==============================================================================
 
@@ -32,11 +33,15 @@ setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
-    rsync -av $DIR/resources/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
+    rsync -av /usr/local/bin/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache...")
+
+# # split --bytes 45M --numeric-suffixes --suffix-length=1 directx_feb2010_redist.exe directx_feb2010_redist.exe.
+
+# cat directx_feb2010_redist.exe.* > directx_feb2010_redist.exe-new
 
     # setup prefix
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
@@ -60,7 +65,7 @@ setupPrefix () {
         errorExit "<b>Setup of Logos Wine Prefix failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q dotnet472 | zenity \
+    WINEPREFIX=$PREFIX /usr/local/bin/winetricks -q dotnet472 | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Installing .NET 4.7.2" \
@@ -79,7 +84,7 @@ setupPrefix () {
         errorExit "<b>.NET 4.7.2 install in Logos Wine Prefix failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks -q corefonts | zenity \
+    WINEPREFIX=$PREFIX /usr/local/bin/winetricks -q corefonts | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Installing CoreFonts" \
@@ -99,16 +104,16 @@ setupPrefix () {
 
     # set fontsmoothing
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks settings fontsmooth=rgb
+    WINEPREFIX=$PREFIX /usr/local/bin/winetricks settings fontsmooth=rgb
 
     # 2019-10-06 rik: not needed as ddr=gdi solves glitching
     # prevent window manager from decorating windows (attempting to reduce
     #   graphical glitching
-    # WINEPREFIX=$PREFIX $DIR/resources/winetricks settings windowmanagerdecorated=n
+    # WINEPREFIX=$PREFIX /usr/local/bin/winetricks settings windowmanagerdecorated=n
 
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing.
-    WINEPREFIX=$PREFIX $DIR/resources/winetricks ddr=gdi
+    WINEPREFIX=$PREFIX /usr/local/bin/winetricks ddr=gdi
 
     cleanupPrefix
 }

@@ -1,3 +1,9 @@
+wasta-logos-setup (0.1.9) bionic; urgency=medium
+
+  * install-files/winetricks: installing to /usr/local/bin
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Thu, 10 Oct 2019 18:54:42 +0300
+
 wasta-logos-setup (0.1.8) bionic; urgency=medium
 
   * wasta-logos-setup: add winetricks ddr=gdi to address graphical

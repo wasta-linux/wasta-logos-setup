@@ -1,3 +1,4 @@
 install-files/bin                          usr
 install-files/org.wasta.logos.policy       usr/share/polkit-1/actions
+install-files/winetricks                   usr/local/bin
 wasta-logos-setup                          usr/share
