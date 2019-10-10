@@ -1,3 +1,10 @@
+wasta-logos-setup (0.1.10) bionic; urgency=medium
+
+  * postinst: creating winetricks symlink
+  * postrm: removing winetricks symlink
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Thu, 10 Oct 2019 19:39:53 +0300
+
 wasta-logos-setup (0.1.9) bionic; urgency=medium
 
   * install-files/winetricks: installing to /usr/local/bin

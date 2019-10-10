@@ -42,6 +42,15 @@ case "$1" in
             echo
             mv "$DLL_FILE-wasta" "$DLL_FILE"
         fi
+
+        LN_FILE="/usr/local/bin/winetricks"
+        if [ -L "$LN_FILE" ];
+        then
+            echo
+            echo "*** Removing symlink: $LN_FILE"
+            echo
+            rm "$LN_FILE"
+        fi
     ;;
 
     *)

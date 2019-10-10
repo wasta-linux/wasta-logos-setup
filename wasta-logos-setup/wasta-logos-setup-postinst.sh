@@ -8,6 +8,7 @@
 #   only intended to be run at package installation.
 #
 # 2019-09-28 rik: initial script
+# 2019-10-10 rik: adding winetricks symlink
 #
 # ==============================================================================
 
@@ -111,6 +112,15 @@ then
             echo
         ;;
     esac
+fi
+
+LN_FILE="/usr/local/bin/winetricks"
+if ! [ -L "$LN_FILE" ];
+then
+    echo
+    echo "*** Creating winetricks symlink: $LN_FILE"
+    echo
+    ln -s $DIR/resources/winetricks $LN_FILE
 fi
 
 # ------------------------------------------------------------------------------
