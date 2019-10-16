@@ -33,7 +33,7 @@ setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
-    rsync -av /usr/local/bin/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
+    rsync -av $DIR/resources/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Copying Winetricks Cache" \
@@ -362,6 +362,9 @@ Proceeding with installation..."
 
     if [ "$INSTALL_FILE" ];
     then
+        # Set Wine to win7 for Logos install
+        WINEPREFIX=$PREFIX winetricks -q win7
+
         WINEPREFIX=$PREFIX msiexec /i "$INSTALL_FILE"
         OUTNUM=$?
         if [ "$OUTNUM" -ne 0 ];
@@ -374,6 +377,9 @@ $INSTALL_FILE"
 
         # add LC_ALL=C
         sed -i -e "s@\(Software.lnk$\)@\1 LC_ALL=C@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
+
+        # Set Wine to winxp for Logos Usage
+        WINEPREFIX=$PREFIX winetricks -q winxp
 
         zenity --info --no-wrap --height=200 \
             --title="wasta-logos-setup: Complete" \
