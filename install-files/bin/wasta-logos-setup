@@ -214,11 +214,8 @@ then
 fi
 
 # ------------------------------------------------------------------------------
-# Optionally patch kernelbase.dll (if an administrator)
+# Check if wine and winetricks patched: if not prompt to run postinst
 # ------------------------------------------------------------------------------
-
-# NOTE: may need to patch even if previously patched, because wine may have
-#   updated.
 
 WINE_VERSION=$(wine --version)
 TEMP=${WINE_VERSION/wine-/}
@@ -231,15 +228,15 @@ WASTA_WINETRICKS="$DIR/resources/winetricks"
 WINETRICKS_SOURCE=$(readlink -f "/usr/local/bin/winetricks")
 
 # Check for matching wine version and winetricks - if NOT then re-run postinst
-if ! [ "$PATCH_FILE" == "$DLL_SOURCE" ] | ! [ "$WINETRICKS_SOURCE" == "$WASTA_WINETRICKS" ];
-then 
+if ! [ "$PATCH_FILE" == "$DLL_SOURCE" ] || ! [ "$WINETRICKS_SOURCE" == "$WASTA_WINETRICKS" ];
+then
     # prompt for running wasta-logos-setup postinst
     zenity --question --title "Patch Wine and Winetricks" \
         --no-wrap --height=150 --width=450 \
         --window-icon=$DIR/resources/wasta-linux.png \
         --text="<b>Updates needed to Wine or Winetricks for Logos compatibility.</b>\n
 <i>NOTE: you will need to provide an administrative password</i>\n"
-RUN_PATCH=$?
+    RUN_PATCH=$?
 
     if [ "$RUN_PATCH" == 0 ];
     then
@@ -251,6 +248,10 @@ RUN_PATCH=$?
             exit 1
         fi
     fi
+else
+    echo
+    echo "*** wine and winetricks already patched for Logos compatibility"
+    echo
 fi
 
 # ------------------------------------------------------------------------------

@@ -55,7 +55,7 @@ echo
 echo "*** Beginning wasta-logos-setup-postinst.sh"
 echo
 
-# Setup Diretory for later reference
+# Setup Directory for later reference
 DIR=/usr/share/wasta-logos-setup
 
 WINE_VERSION=$(wine --version)
@@ -66,8 +66,17 @@ PATCH_FILE="$DIR/resources/kernelbase-$WINE_VERSION_FORMAT.dll"
 
 if [ -e "$PATCH_FILE" ];
 then
-    DLL_FILE=/opt/wine-devel/lib/wine/kernelbase.dll
-    linkFile "$PATCH_FILE" "$DLL_FILE"
+    KERNELBASE=/opt/wine-devel/lib/wine/kernelbase.dll
+    KERNELBASE_SOURCE=$(readlink -f "$KERNELBASE")
+
+    if ! [ "$KERNELBASE_SOURCE" == "$PATCH_FILE" ];
+    then
+        linkFile "$PATCH_FILE" "$KERNELBASE"
+    else
+        echo
+        echo "*** wine already patched for Logos compatibility"
+        echo
+    fi
 else
     echo
     echo "*** unsupported wine version: $WINE_VERSION - wine not patched!"
@@ -83,7 +92,7 @@ then
     linkFile "$WASTA_WINETRICKS" "$LOCAL_BIN_WINETRICKS"
 else
     echo
-    echo "*** winetricks already pointing to $WASTA_WINETRICKS"
+    echo "*** winetricks already setup for Logos compatibility"
     echo
 fi
 
