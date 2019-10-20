@@ -11,6 +11,7 @@
 #   2019-10-04 rik: adding logos download option and additional error processing
 #   2019-10-06 rik: adding winetricks ddr=gdi to address graphical glitches
 #   2019-10-10 rik: moving winetricks to /usr/local/bin
+#   2019-10-20 rik: re-working logic to determine if postinst needs run
 #
 # ==============================================================================
 
@@ -216,17 +217,31 @@ fi
 # Optionally patch kernelbase.dll (if an administrator)
 # ------------------------------------------------------------------------------
 
-if ! [ -e /opt/wine-devel/lib/wine/kernelbase.dll-orig ];
+# NOTE: may need to patch even if previously patched, because wine may have
+#   updated.
+
+WINE_VERSION=$(wine --version)
+TEMP=${WINE_VERSION/wine-/}
+WINE_VERSION_FORMAT=${TEMP/./-}
+
+PATCH_FILE="$DIR/resources/kernelbase-$WINE_VERSION_FORMAT.dll"
+DLL_SOURCE=$(readlink -f /opt/wine-devel/lib/wine/kernelbase.dll)
+
+WASTA_WINETRICKS="$DIR/resources/winetricks"
+WINETRICKS_SOURCE=$(readlink -f "/usr/local/bin/winetricks")
+
+# Check for matching wine version and winetricks - if NOT then re-run postinst
+if ! [ "$PATCH_FILE" == "$DLL_SOURCE" ] | ! [ "$WINETRICKS_SOURCE" == "$WASTA_WINETRICKS" ];
 then 
-    # prompt for running wasta-layout-system
-    zenity --question --title "Patch Wine?" \
+    # prompt for running wasta-logos-setup postinst
+    zenity --question --title "Patch Wine and Winetricks" \
         --no-wrap --height=150 --width=450 \
         --window-icon=$DIR/resources/wasta-linux.png \
-        --text="<b>Patch Wine for Logos compatibility?</b>\n
+        --text="<b>Updates needed to Wine or Winetricks for Logos compatibility.</b>\n
 <i>NOTE: you will need to provide an administrative password</i>\n"
-PATCH_WINE=$?
+RUN_PATCH=$?
 
-    if [ "$PATCH_WINE" == 0 ];
+    if [ "$RUN_PATCH" == 0 ];
     then
         pkexec $DIR/wasta-logos-setup-postinst.sh
         RETURN=$?

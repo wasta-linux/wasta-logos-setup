@@ -1,3 +1,11 @@
+wasta-logos-setup (0.2.0) bionic; urgency=medium
+
+  * postinst: re-working to determine patch file based on wine version
+  * wasta-logos-setup: re-working logic to determine if postinst needs run
+  * debian/control: adding cabextract dependency
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sun, 20 Oct 2019 15:07:15 +0300
+
 wasta-logos-setup (0.1.11) bionic; urgency=medium
 
   * correcting winetricks-cache copying
