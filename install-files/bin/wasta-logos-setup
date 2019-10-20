@@ -38,7 +38,7 @@ setupPrefix () {
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Copying Winetricks Cache" \
-        --text="Copying Winetricks Cache...")
+        --text="Copying Winetricks Cache... \n\n")
 
 # # split --bytes 45M --numeric-suffixes --suffix-length=1 directx_feb2010_redist.exe directx_feb2010_redist.exe.
 
@@ -89,7 +89,7 @@ setupPrefix () {
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.png \
         --title="Installing CoreFonts" \
-        --text="Installing Corefonts... \n" &
+        --text="Installing Corefonts... \n\n" &
     # get zenity process id
     PID_ZENITY=${!}
 
