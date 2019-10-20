@@ -107,13 +107,8 @@ setupPrefix () {
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
     WINEPREFIX=$PREFIX /usr/local/bin/winetricks settings fontsmooth=rgb
 
-    # 2019-10-06 rik: not needed as ddr=gdi solves glitching
-    # prevent window manager from decorating windows (attempting to reduce
-    #   graphical glitching
-    # WINEPREFIX=$PREFIX /usr/local/bin/winetricks settings windowmanagerdecorated=n
-
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
-    #   etc disappearing / reappearing.
+    #   etc disappearing / reappearing)
     WINEPREFIX=$PREFIX /usr/local/bin/winetricks ddr=gdi
 
     cleanupPrefix
@@ -230,6 +225,10 @@ WINETRICKS_SOURCE=$(readlink -f "/usr/local/bin/winetricks")
 # Check for matching wine version and winetricks - if NOT then re-run postinst
 if ! [ "$PATCH_FILE" == "$DLL_SOURCE" ] || ! [ "$WINETRICKS_SOURCE" == "$WASTA_WINETRICKS" ];
 then
+    echo
+    echo "*** wine or winetricks need patched for Logos compatibility"
+    echo
+
     # prompt for running wasta-logos-setup postinst
     zenity --question --title "Patch Wine and Winetricks" \
         --no-wrap --height=150 --width=450 \
@@ -302,7 +301,7 @@ then
             --window-icon=$DIR/resources/wasta-linux.png \
             --text="'Logos-x86.msi' wasn't found in your Downloads folder.\n
 <b>Download Logos-x86.msi from the internet?</b>\n
-<i>If you answer 'no' then you will be prompted to locate your 'Logos-x86.msi' file.</i>\n"
+<i>If you answer 'no' then you will be prompted to locate your 'Logos-x86.msi' file.</i>"
 
         if [ "$?" -eq 0 ];
         then
