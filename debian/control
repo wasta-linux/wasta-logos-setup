@@ -8,7 +8,8 @@ Homepage: https://github.com/wasta-linux/wasta-logos-setup
 
 Package: wasta-logos-setup
 Architecture: all
-Depends: cabextract, rsync, winehq-devel | winehq-staging | wine (>= 4.16) | wine-development (>= 4.16), zenity, ${shlibs:Depends}, ${misc:Depends}
+Depends: cabextract, rsync, wasta-wine, wasta-winetricks, zenity, ${shlibs:Depends}, ${misc:Depends}
+Recommends: wasta-logos-installer
 Description: Setup Logos via WINE
  Patches wine for Logos compatibility, sets up Logos wine prefix,
  installs .NET 4.7.2 in the wine prefix, and installs Logos.

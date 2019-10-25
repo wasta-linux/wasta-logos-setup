@@ -1,6 +1,7 @@
 wasta-logos-setup (0.3.0) bionic; urgency=medium
 
-  * refactoring to split off wine, winetricks, and Logos isntaller into separate packages
+  * refactoring to split off wine, winetricks, and Logos installer
+    into separate packages
 
  -- Rik Shaw <rikshaw76@gmail.com>  Fri, 25 Oct 2019 16:22:53 +0300
 

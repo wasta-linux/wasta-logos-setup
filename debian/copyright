@@ -3,14 +3,6 @@ Upstream-Name: wasta-logos-setup
 Source: https://github.com/wasta-linux/wasta-logos-setup
 Homepage: https://github.com/wasta-linux/wasta-logos-setup
 
-Files: wasta-logos-setup/resources/Logos8-x86.exe
-Copyright: Faithlife <tech@faithlife.com>
-License: Proprietary - free to use
-
-Files: wasta-logos-setup/resources/winetricks-cache/*
-Copyright: Wine Developers <web-admin@winehq.org>
-License: Proprietary - free to use
-
 Files: *
 Copyright: 2019 Rik Shaw <rikshaw76@gmail.com>
 License: GPL-3.0+
