@@ -1,3 +1,9 @@
+wasta-logos-setup (0.3.0) bionic; urgency=medium
+
+  * refactoring to split off wine, winetricks, and Logos isntaller into separate packages
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Fri, 25 Oct 2019 16:22:53 +0300
+
 wasta-logos-setup (0.2.0) bionic; urgency=medium
 
   * postinst: re-working to determine patch file based on wine version
