@@ -1,3 +1,2 @@
 install-files/bin                          usr
-install-files/org.wasta.logos.policy       usr/share/polkit-1/actions
 wasta-logos-setup                          usr/share

@@ -11,7 +11,9 @@ Architecture: all
 Depends: cabextract, rsync, wasta-wine, wasta-winetricks, zenity, ${shlibs:Depends}, ${misc:Depends}
 Recommends: wasta-logos-installer
 Description: Setup Logos via WINE
- Patches wine for Logos compatibility, sets up Logos wine prefix,
- installs .NET 4.7.2 in the wine prefix, and installs Logos.
+ Patches WINE for Logos compatibility, sets up Logos WINE prefix using
+ wasta-wine, installs .NET 4.7.2 in the wine prefix using wasta-winetricks,
+ and installs Logos, using ~/Downloads/Logos-x86.msi or Logos-x86.msi from
+ wasta-logos-installer.
  .
  Needs to be run for each user wanting Logos.
