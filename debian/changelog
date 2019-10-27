@@ -1,3 +1,9 @@
+wasta-logos-setup (0.3.1) bionic; urgency=medium
+
+  * adding wine-logos-winecfg.desktop
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sun, 27 Oct 2019 18:29:39 +0300
+
 wasta-logos-setup (0.3.0) bionic; urgency=medium
 
   * refactoring to split off wine, winetricks, and Logos installer

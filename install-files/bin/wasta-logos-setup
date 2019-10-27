@@ -147,7 +147,7 @@ cleanupPrefix () {
 # ------------------------------------------------------------------------------
 progressCheck () {
     echo
-    echo "Watching zenity process. If it is canceled then kill PID_PROCESS: $PID_PROCESS"
+    echo "*** Watching zenity process. If it is canceled then kill PID_PROCESS: $PID_PROCESS"
     echo
 
     # loop to check that progress dialog has not been cancelled
@@ -166,14 +166,14 @@ progressCheck () {
     then
         # parallel process STILL FOUND: user canceled so kill it!
         echo
-        echo "Zenity process ended (canceled) before parallel process: Killing PID_PROCESS: $PID_PROCESS"
+        echo "*** Zenity process ended (canceled) before parallel process: Killing PID_PROCESS: $PID_PROCESS"
         echo
         kill -9 ${PID_PROCESS}
         return 99
     else
         # parallel process NOT found after zenity completed: both completed
         echo
-        echo "Zenity process and parallel process both ended: success"
+        echo "*** Zenity process and parallel process both ended: success"
         echo
         return 0
     fi
@@ -265,6 +265,9 @@ The recommended method is to install the <i>'wasta-logos-installer'</i> package.
 
     if [ "$INSTALL_FILE" ];
     then
+        # Make Winecfg launcher available for user
+        cp $DIR/resources/wine-logos-winecfg.desktop $HOME/.local/share/applications/
+
         # Set Wine to win7 for Logos install
         WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q win7
 

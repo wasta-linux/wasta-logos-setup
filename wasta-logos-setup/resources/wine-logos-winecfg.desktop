@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Configure Logos Wine
+Comment=Change Logos Wine configuration options
+Exec=sh -c " WINEPREFIX=\\$HOME/.wine-logos/ WINEARCH=win32 WINESERVER=/opt/wasta-wine/bin/wineserver WINE=/opt/wasta-wine/bin/wine /opt/wasta-winetricks/winetricks winecfg"
+Terminal=false
+Icon=wine-winecfg
+Type=Application
+Categories=Wine;
+StartupWMClass=winecfg.exe
