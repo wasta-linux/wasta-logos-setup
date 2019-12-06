@@ -1,3 +1,9 @@
+wasta-logos-setup (0.3.2) bionic; urgency=medium
+
+  * removing "LC_ALL=C" (it prevents using saved layouts)
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Fri, 06 Dec 2019 11:52:15 +0300
+
 wasta-logos-setup (0.3.1) bionic; urgency=medium
 
   * adding wine-logos-winecfg.desktop

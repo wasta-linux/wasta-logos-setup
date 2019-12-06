@@ -14,6 +14,8 @@
 #   2019-10-20 rik: re-working logic to determine if postinst needs run
 #   2019-10-25 rik: re-working logic to use wasta-wine, wasta-winetricks, and
 #       wasta-logos-installer
+#   2019-12-06 rik: removing "LC_ALL=C" from launcher (prevents using saved
+#       layouts)
 #
 # ==============================================================================
 
@@ -281,8 +283,8 @@ The recommended method is to install the <i>'wasta-logos-installer'</i> package.
 $INSTALL_FILE"
         fi
 
-        # add LC_ALL=C to the desktop launcher
-        sed -i -e "s@\(Software.lnk$\)@\1 LC_ALL=C@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
+        # legacy: remove any "LC_ALL=C" from the desktop launcher
+        sed -i -e "s@ LC_ALL=C@@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         # point to specific version of wine to run Logos
         sed -i -e "s@ wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
