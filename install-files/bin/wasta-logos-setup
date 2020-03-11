@@ -16,6 +16,7 @@
 #       wasta-logos-installer
 #   2019-12-06 rik: removing "LC_ALL=C" from launcher (prevents using saved
 #       layouts)
+#   2020-03-12 rik: updating logo
 #
 # ==============================================================================
 
@@ -40,7 +41,7 @@ setupPrefix () {
     # copy in winetricks cache
     rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache... \n\n")
 
@@ -49,7 +50,7 @@ setupPrefix () {
     #   But some users are having freezing issues so I am reverting this.
     WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --title="Setting up Wine Prefix" \
         --text="Setting up Wine Prefix... \n\n" &
     # get zenity process id
@@ -68,7 +69,7 @@ setupPrefix () {
 
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q dotnet472 | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --title="Installing .NET 4.7.2" \
         --text="Installing .NET 4.7.2... \n
 <i>Please be patient: this could take up to 30 minutes</i>\n" &
@@ -87,7 +88,7 @@ setupPrefix () {
 
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q corefonts | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --title="Installing CoreFonts" \
         --text="Installing Corefonts... \n\n" &
     # get zenity process id
@@ -122,7 +123,7 @@ setupPrefix () {
 errorExit () {
     zenity --error --no-wrap --height=200 \
         --title="wasta-logos-setup: Error" \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --text="$1 \n
 <i>wasta-logos-setup will now exit.</i>" >/dev/null 2>&1
     exit 1
@@ -194,7 +195,7 @@ PREFIX=/home/$USER/.wine-logos
 
 zenity --question --no-wrap --height=200 --width=500 \
     --title="wasta-logos-setup" \
-    --window-icon=$DIR/resources/wasta-linux.png \
+    --window-icon=$DIR/resources/wasta-linux.svg \
     --text="<b>Do you want to install Logos using Wine?</b>\n
 <b>Processing Summary:</b>
    * Create a 'Logos Wine Prefix' using a patched wine from 'wasta-wine'
@@ -215,7 +216,7 @@ then
     # Wine PREFIX exists, ask user if they want to overwrite it or update it
     zenity --question --no-wrap --height=200 --width=500 \
         --title="wasta-logos-setup" \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --text="<b>Remove existing Logos Wine Prefix?</b>\n
 <i>The folder <u>'$PREFIX'</u> already exists.  Do you want to
 delete it in order to re-setup a new Logos Wine Prefix?</i>\n"
@@ -230,7 +231,7 @@ else
     # No Wine PREFIX: prompt user
     zenity --question --no-wrap --height=200 --width=500 \
         --title="wasta-logos-setup" \
-        --window-icon=$DIR/resources/wasta-linux.png \
+        --window-icon=$DIR/resources/wasta-linux.svg \
         --text="<b>Setup Logos Wine Prefix?</b>\n
 <i>Do you want to setup a new Logos Wine Prefix?</i>\n"
 
@@ -294,7 +295,7 @@ $INSTALL_FILE"
 
         zenity --info --no-wrap --height=200 \
             --title="wasta-logos-setup: Complete" \
-            --window-icon=$DIR/resources/wasta-linux.png \
+            --window-icon=$DIR/resources/wasta-linux.svg \
             --text="<b>Logos setup complete!</b>\n
 <i>Find 'Logos Bible Software' in the <u>Main Menu</u>
 under the <u>'Wine'</u> category</i>"

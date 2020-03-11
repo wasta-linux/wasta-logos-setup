@@ -1,3 +1,9 @@
+wasta-logos-setup (1.0.0) bionic; urgency=medium
+
+  * updating to version 1.0.0
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Wed, 11 Mar 2020 15:54:25 +0300
+
 wasta-logos-setup (0.3.2) bionic; urgency=medium
 
   * removing "LC_ALL=C" (it prevents using saved layouts)
