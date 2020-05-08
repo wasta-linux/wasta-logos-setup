@@ -1,3 +1,11 @@
+wasta-logos-setup (1.1.0) focal; urgency=medium
+
+  * adding sleep before patch to desktop launcher (was *sometimes*
+    not updating the launcher to reference wasta-wine)
+  * updating logo
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Fri, 08 May 2020 18:23:53 -0500
+
 wasta-logos-setup (1.0.0) bionic; urgency=medium
 
   * updating to version 1.0.0

@@ -112,6 +112,8 @@ setupPrefix () {
     #   etc disappearing / reappearing)
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi
 
+    #NOTE: patch to correct ddr=gdi added to wasta-winetricks
+
     cleanupPrefix
 }
 
@@ -288,6 +290,8 @@ $INSTALL_FILE"
         sed -i -e "s@ LC_ALL=C@@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         # point to specific version of wine to run Logos
+        # not sure why but this was not getting updated: adding sleep to see if helps
+        sleep 2
         sed -i -e "s@ wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         # Set Wine to winxp for Logos Usage
