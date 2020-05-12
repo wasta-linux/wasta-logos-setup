@@ -1,3 +1,10 @@
+wasta-logos-setup (1.1.1) UNRELEASED; urgency=medium
+
+  * updating to use dotnet48
+  * adding sleep so that launcher found for sed edits
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Tue, 12 May 2020 12:01:19 -0500
+
 wasta-logos-setup (1.1.0) focal; urgency=medium
 
   * adding sleep before patch to desktop launcher (was *sometimes*

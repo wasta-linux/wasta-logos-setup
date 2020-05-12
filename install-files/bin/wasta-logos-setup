@@ -2,9 +2,8 @@
 
 # ==============================================================================
 # Logos Wine Setup
-#   - Patch Wine
 #   - Create Logos Wine Prefix
-#   - Install .NET 4.7.2 in Logos Wine Prefix
+#   - Install .NET 4.8 in Logos Wine Prefix
 #   - Install Logos
 #
 #   2019-09-28 rik: initial script
@@ -17,6 +16,7 @@
 #   2019-12-06 rik: removing "LC_ALL=C" from launcher (prevents using saved
 #       layouts)
 #   2020-03-12 rik: updating logo
+#   2020-05-11 rik: adding sleep before launcher edits
 #
 # ==============================================================================
 
@@ -67,11 +67,11 @@ setupPrefix () {
         errorExit "<b>Setup of Logos Wine Prefix failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q dotnet472 | zenity \
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q dotnet48 | zenity \
         --height=150 --width=450 --progress --pulsate --auto-close \
         --window-icon=$DIR/resources/wasta-linux.svg \
-        --title="Installing .NET 4.7.2" \
-        --text="Installing .NET 4.7.2... \n
+        --title="Installing .NET 4.8" \
+        --text="Installing .NET 4.8... \n
 <i>Please be patient: this could take up to 30 minutes</i>\n" &
     # get zenity process id
     PID_ZENITY=${!}
@@ -83,7 +83,7 @@ setupPrefix () {
     if [ "$?" -eq 99 ];
     then
         # zenity canceled, .NET install didn't complete
-        errorExit "<b>.NET 4.7.2 install in Logos Wine Prefix failed!</b>"
+        errorExit "<b>.NET 4.8 install in Logos Wine Prefix failed!</b>"
     fi
 
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q corefonts | zenity \
@@ -111,8 +111,6 @@ setupPrefix () {
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing)
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi
-
-    #NOTE: patch to correct ddr=gdi added to wasta-winetricks
 
     cleanupPrefix
 }
@@ -201,7 +199,7 @@ zenity --question --no-wrap --height=200 --width=500 \
     --text="<b>Do you want to install Logos using Wine?</b>\n
 <b>Processing Summary:</b>
    * Create a 'Logos Wine Prefix' using a patched wine from 'wasta-wine'
-   * Install .NET 4.7.2 from 'wasta-winetricks'
+   * Install .NET 4.8 from 'wasta-winetricks'
    * Install Logos"
 if [ "$?" -ne 0 ];
 then
@@ -286,12 +284,15 @@ The recommended method is to install the <i>'wasta-logos-installer'</i> package.
 $INSTALL_FILE"
         fi
 
+        # not sure why but below edits to launcher were not getting applied
+        #   with a message that the file wasn't found:
+        #   Adding sleep to see if helps
+        sleep 2
+
         # legacy: remove any "LC_ALL=C" from the desktop launcher
         sed -i -e "s@ LC_ALL=C@@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         # point to specific version of wine to run Logos
-        # not sure why but this was not getting updated: adding sleep to see if helps
-        sleep 2
         sed -i -e "s@ wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         # Set Wine to winxp for Logos Usage
