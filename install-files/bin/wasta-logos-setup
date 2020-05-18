@@ -17,6 +17,7 @@
 #       layouts)
 #   2020-03-12 rik: updating logo
 #   2020-05-11 rik: adding sleep before launcher edits
+#   2020-05-18 rik: setting Downloads folder from xdg-user-dir
 #
 # ==============================================================================
 
@@ -190,12 +191,13 @@ progressCheck () {
 WINE_DIR=/opt/wasta-wine
 WINETRICKS_DIR=/opt/wasta-winetricks
 INSTALLER_DIR=/opt/wasta-logos-installer
+DOWNLOAD_DIR="$(xdg-user-dir DOWNLOAD)"
 DIR=/usr/share/wasta-logos-setup
 PREFIX=/home/$USER/.wine-logos
+ZENITY_SETTINGS="--no-wrap --height=200 --width=500 --window-icon=$DIR/resources/wasta-linux.svg"
 
-zenity --question --no-wrap --height=200 --width=500 \
+zenity --question $ZENITY_SETTINGS \
     --title="wasta-logos-setup" \
-    --window-icon=$DIR/resources/wasta-linux.svg \
     --text="<b>Do you want to install Logos using Wine?</b>\n
 <b>Processing Summary:</b>
    * Create a 'Logos Wine Prefix' using a patched wine from 'wasta-wine'
@@ -214,9 +216,8 @@ fi
 if [ -d "$PREFIX" ];
 then
     # Wine PREFIX exists, ask user if they want to overwrite it or update it
-    zenity --question --no-wrap --height=200 --width=500 \
+    zenity --question $ZENITY_SETTINGS \
         --title="wasta-logos-setup" \
-        --window-icon=$DIR/resources/wasta-linux.svg \
         --text="<b>Remove existing Logos Wine Prefix?</b>\n
 <i>The folder <u>'$PREFIX'</u> already exists.  Do you want to
 delete it in order to re-setup a new Logos Wine Prefix?</i>\n"
@@ -229,9 +230,8 @@ delete it in order to re-setup a new Logos Wine Prefix?</i>\n"
     setupPrefix
 else
     # No Wine PREFIX: prompt user
-    zenity --question --no-wrap --height=200 --width=500 \
+    zenity --question $ZENITY_SETTINGS \
         --title="wasta-logos-setup" \
-        --window-icon=$DIR/resources/wasta-linux.svg \
         --text="<b>Setup Logos Wine Prefix?</b>\n
 <i>Do you want to setup a new Logos Wine Prefix?</i>\n"
 
@@ -248,9 +248,9 @@ fi
 if [ -d "$PREFIX" ];
 then
     INSTALL_FILE=""
-    if [ -e "$HOME/Downloads/Logos-x86.msi" ];
+    if [ -e "$DOWNLOAD_DIR/Logos-x86.msi" ];
     then
-        INSTALL_FILE="$HOME/Downloads/Logos-x86.msi"
+        INSTALL_FILE="$DOWNLOAD_DIR/Logos-x86.msi"
     elif [ -e "$INSTALLER_DIR/Logos-x86.msi" ];
     then
         INSTALL_FILE="$INSTALLER_DIR/Logos-x86.msi"
@@ -298,9 +298,8 @@ $INSTALL_FILE"
         # Set Wine to winxp for Logos Usage
         WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp
 
-        zenity --info --no-wrap --height=200 \
+        zenity --info $ZENITY_SETTINGS \
             --title="wasta-logos-setup: Complete" \
-            --window-icon=$DIR/resources/wasta-linux.svg \
             --text="<b>Logos setup complete!</b>\n
 <i>Find 'Logos Bible Software' in the <u>Main Menu</u>
 under the <u>'Wine'</u> category</i>"

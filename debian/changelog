@@ -1,4 +1,10 @@
-wasta-logos-setup (1.1.1) UNRELEASED; urgency=medium
+wasta-logos-setup (1.1.2) bionic; urgency=medium
+
+  * using xdg-user-dirs to set Downloads directory
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Mon, 18 May 2020 12:55:03 -0500
+
+wasta-logos-setup (1.1.1) bionic; urgency=medium
 
   * updating to use dotnet48
   * adding sleep so that launcher found for sed edits
