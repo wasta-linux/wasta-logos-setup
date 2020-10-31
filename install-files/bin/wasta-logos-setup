@@ -238,7 +238,7 @@ INSTALLER_DIR=/opt/wasta-logos-installer
 DOWNLOAD_DIR="$(xdg-user-dir DOWNLOAD)"
 DIR=/usr/share/wasta-logos-setup
 PREFIX=/home/$USER/.wine-logos
-ZENITY_SETTINGS="--height=200 --width=500 --window-icon=wasta-logos"
+ZENITY_SETTINGS="--height=200 --width=500 --window-icon=/usr/share/icons/hicolor/scalable/apps/wasta-logos.svg"
 
 #Cleanup Index: remove contents of BibleIndex, LibraryIndex, PersonalBookIndex and LibraryCatalog 
 
