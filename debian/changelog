@@ -1,3 +1,9 @@
+wasta-logos-setup (1.2.0) focal; urgency=medium
+
+  * re-working dialogs
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sat, 31 Oct 2020 15:46:26 +0300
+
 wasta-logos-setup (1.1.2) bionic; urgency=medium
 
   * using xdg-user-dirs to set Downloads directory

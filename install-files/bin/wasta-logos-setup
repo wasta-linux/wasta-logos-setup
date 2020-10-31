@@ -41,19 +41,17 @@ setupPrefix () {
 
     # copy in winetricks cache
     rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
-        --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.svg \
+        $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache... \n\n")
 
     # setup prefix
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
     #   But some users are having freezing issues so I am reverting this.
-    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | zenity \
-        --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.svg \
-        --title="Setting up Wine Prefix" \
-        --text="Setting up Wine Prefix... \n\n" &
+    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | zenity $ZENITY_SETTINGS \
+        --progress --pulsate --auto-close \
+        --title="wasta [Logos] Setup: Creating Prefix" \
+        --text="Creating <i>Logos Wine Prefix</i> ... \n\n" &
     # get zenity process id
     PID_ZENITY=${!}
 
@@ -65,15 +63,15 @@ setupPrefix () {
     then
         # zenity canceled, Prefix setup didn't complete
         # some failure: exit
-        errorExit "<b>Setup of Logos Wine Prefix failed!</b>"
+        errorExit "<b>Creation of <i>Logos Wine Prefix</i> failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q dotnet48 | zenity \
-        --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.svg \
-        --title="Installing .NET 4.8" \
-        --text="Installing .NET 4.8... \n
-<i>Please be patient: this could take up to 30 minutes</i>\n" &
+    # 2020-10-25: -q is less stable for .NET 4.0 install, so removing: may need
+    # to prompt user to guide them on what to click?
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q dotnet40 dotnet48 | zenity $ZENITY_SETTINGS \
+        --progress --pulsate --auto-close \
+        --title="wasta [Logos] Setup: Installing .NET" \
+        --text="Installing .NET 4.0 and 4.8 in the <i>Logos Wine Prefix</i> ... \n\n" &
     # get zenity process id
     PID_ZENITY=${!}
 
@@ -83,14 +81,21 @@ setupPrefix () {
     progressCheck $PID_ZENITY $PID_PROCESS
     if [ "$?" -eq 99 ];
     then
-        # zenity canceled, .NET install didn't complete
-        errorExit "<b>.NET 4.8 install in Logos Wine Prefix failed!</b>"
+        # zenity canceled, Prefix setup didn't complete
+        # some failure: exit
+        errorExit "<b>.NET installation failed!</b>"
     fi
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q corefonts | zenity \
-        --height=150 --width=450 --progress --pulsate --auto-close \
-        --window-icon=$DIR/resources/wasta-linux.svg \
-        --title="Installing CoreFonts" \
+    sleep 2
+
+    # reboot wine
+    WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
+
+    sleep 2
+
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q corefonts | zenity $ZENITY_SETTINGS \
+        --progress --pulsate --auto-close \
+        --title="wasta [Logos] Setup: Installing CoreFonts" \
         --text="Installing Corefonts... \n\n" &
     # get zenity process id
     PID_ZENITY=${!}
@@ -102,7 +107,7 @@ setupPrefix () {
     if [ "$?" -eq 99 ];
     then
         # zenity canceled, Corefonts install didn't complete
-        errorExit "<b>Corefonts install in Logos Wine Prefix failed!</b>"
+        errorExit "<b>Corefonts install failed!</b>"
     fi
 
     # set fontsmoothing
@@ -122,11 +127,10 @@ setupPrefix () {
 #   exit script with passed message
 # ------------------------------------------------------------------------------
 errorExit () {
-    zenity --error --no-wrap --height=200 \
-        --title="wasta-logos-setup: Error" \
-        --window-icon=$DIR/resources/wasta-linux.svg \
+    zenity --error $ZENITY_SETTINGS \
+        --title="wasta [Logos] Setup: Error" \
         --text="$1 \n
-<i>wasta-logos-setup will now exit.</i>" >/dev/null 2>&1
+<i>Wasta-Logos-Setup</i> will now exit." >/dev/null 2>&1
     exit 1
 }
 
@@ -183,6 +187,46 @@ progressCheck () {
     fi
 }
 
+# ------------------------------------------------------------------------------
+# Function: indexLogos
+#
+#   clear Logos index folders and attempt to re-index
+# ------------------------------------------------------------------------------
+indexLogos () {
+    echo
+    echo "*** Re-index Logos"
+    echo
+    # remove corrupt index files
+    rm -f "$1Data/"*"/BibleIndex/"*
+    rm -f "$1Data/"*"/LibraryIndex/"*
+    rm -f "$1Data/"*"/PersonalBookIndex/"*
+    rm -f "$1Data/"*"/LibraryCatalog/"*
+
+    # attempt to re-index
+    zenity --question $ZENITY_SETTINGS \
+        --title="wasta [Logos] Setup: Re-Index Logos?" \
+        --text="<b>Do you want to start <i>LogosIndexer.exe</i></b>\n
+It may take multiple hours to complete and will \
+use a heavy amount of your CPU.\n
+If you <i>do not</i> want to re-index now, choose <i>No.</i>"
+
+    if [ "$?" -ne 0 ];
+    then
+        # User didn't say 'Continue': exit
+        exit 0
+    fi
+
+    WINEPREFIX=$PREFIX "$WINE_DIR/bin/wine" "$1/System/LogosIndexer.exe" >/dev/null 2>&1 &
+
+    zenity --info $ZENITY_SETTINGS \
+        --title="wasta [Logos] Setup: Logos Indexing Started..." \
+        --text="<b><i>Logos</i> Indexing has started</b>\n
+You should see a <i>Logos Indexing</i> icon in your system tray."
+
+    exit 0
+}
+
+
 # ==============================================================================
 # Main Processing
 # ==============================================================================
@@ -194,20 +238,61 @@ INSTALLER_DIR=/opt/wasta-logos-installer
 DOWNLOAD_DIR="$(xdg-user-dir DOWNLOAD)"
 DIR=/usr/share/wasta-logos-setup
 PREFIX=/home/$USER/.wine-logos
-ZENITY_SETTINGS="--no-wrap --height=200 --width=500 --window-icon=$DIR/resources/wasta-linux.svg"
+ZENITY_SETTINGS="--height=200 --width=500 --window-icon=wasta-logos"
 
-zenity --question $ZENITY_SETTINGS \
-    --title="wasta-logos-setup" \
-    --text="<b>Do you want to install Logos using Wine?</b>\n
-<b>Processing Summary:</b>
-   * Create a 'Logos Wine Prefix' using a patched wine from 'wasta-wine'
-   * Install .NET 4.8 from 'wasta-winetricks'
-   * Install Logos"
-if [ "$?" -ne 0 ];
+#Cleanup Index: remove contents of BibleIndex, LibraryIndex, PersonalBookIndex and LibraryCatalog 
+
+zenity --question --title="wasta [Logos] Setup" $ZENITY_SETTINGS \
+    --text="<b>Install, Update, or Repair <i>Logos</i>?</b>\n
+You need a <i>Logos</i> license to activate <i>Logos</i>. If you need to register,
+please visit: <a href='https://www.logos.com/register'>www.logos.com/register</a>\n"
+
+if [ "$?" -eq 0 ];
 then
-    # User didn't said yes: exit
+    echo
+    echo "wasta-logos-setup starting..."
+    echo
+else
+    # exit
     exit 0
 fi
+
+#<b>SELECT</b> your <i>Wasta-Logos-Setup</i> option:\n
+#(<i>Re-Index Logos</i> is only needed if your existing
+#<i>Logos</i> installation reports errors in indexing)\n" \
+#    --radiolist --column "        " --column "Hidden" --column "Option" \
+#    --hide-column=2 --hide-header \
+#        TRUE   INSTALL  "Install, re-install, or update Logos" \
+#        FALSE  INDEX    "Re-Index Logos")
+#       FALSE  BACKUP   "Backup current Logos installation" \
+#       FALSE  RESTORE  "Restore previously backed up Logos installation")
+
+
+#case "$OPTION" in
+#"INSTALL")
+#    echo
+#    echo "Continuing to wasta-logos-setup install process"
+#    echo
+#;;
+
+#"INDEX")
+#    LOGOS_FOLDER="$PREFIX/drive_c/users/$USER/Local Settings/Application Data/Logos/"
+#    if [ -d "$LOGOS_FOLDER" ];
+#    then
+#        indexLogos "$LOGOS_FOLDER"
+#    else
+#        errorExit "<b><i>Logos</i> is NOT installed</b>\n
+#To install <i>Logos<i> please re-run <i>wasta-logos-setup</i>
+#and choose the <i>Install</> option."
+#    fi
+#;;
+
+#*)
+#    # exit: user did not select a choice
+#    exit 0
+#;;
+
+#esac
 
 # ------------------------------------------------------------------------------
 # Setup Logos Prefix and install Logos
@@ -217,23 +302,36 @@ if [ -d "$PREFIX" ];
 then
     # Wine PREFIX exists, ask user if they want to overwrite it or update it
     zenity --question $ZENITY_SETTINGS \
-        --title="wasta-logos-setup" \
-        --text="<b>Remove existing Logos Wine Prefix?</b>\n
-<i>The folder <u>'$PREFIX'</u> already exists.  Do you want to
-delete it in order to re-setup a new Logos Wine Prefix?</i>\n"
+        --title="wasta [Logos] Setup: Delete?" \
+        --text="<b>Delete existing <i>Logos</i> installation?</b>\n
+The folder <u>$PREFIX</u> already exists. Do you want to
+<u>delete</u> it in order to <u>re-install</u> <i>Logos?</i>\n
+<i>(This could result in several GB needing to be downloaded from the internet)</i>\n"
 
     if [ "$?" -eq 0 ];
     then
         # remove PREFIX
         rm -rf $PREFIX
+    else
+        # Wine PREFIX exists, ask user if they want to update or repair install
+        zenity --question $ZENITY_SETTINGS \
+            --title="wasta [Logos] Setup: Update?" \
+            --text="<b>Update existing <i>Logos</i> install?</b>\n
+The folder <u>$PREFIX</u> already exists. Do you want to
+re-run the <i>Logos</i> installer to <u>update</u> or <u>repair</u> <i>Logos?</i>\n"
+
+        if [ "$?" -eq 1 ];
+        then
+            # user doesn't want to update and doesn't want to re-install: exit
+            exit 0
+        fi
     fi
-    setupPrefix
 else
     # No Wine PREFIX: prompt user
     zenity --question $ZENITY_SETTINGS \
-        --title="wasta-logos-setup" \
-        --text="<b>Setup Logos Wine Prefix?</b>\n
-<i>Do you want to setup a new Logos Wine Prefix?</i>\n"
+        --title="wasta [Logos] Setup: Install?" \
+        --text="<b>Install <i>Logos?</i></b>\n
+No existing <i>Logos</i> installation found. Do you want install now?\n"
 
     if [ "$?" -eq 0 ];
     then
@@ -255,11 +353,12 @@ then
     then
         INSTALL_FILE="$INSTALLER_DIR/Logos-x86.msi"
     else
-        errorExit "<b>A Logos installer wasn't found in your <i>Downloads</i> folder
-or from the <i>'wasta-logos-installer'</i> package.</b> You will need to put the
-installer in one of these two locations and then re-run <i>wasta-logos-setup</i>.
+        errorExit "<b>A <i>Logos</i> installer wasn't found in your <i>Downloads</i> folder
+or from the <i>wasta-logos-installer</i> package.</b> You will need to put the
+<i>Logos-x86.msi</i> installer in one of these two locations and then
+re-run <i>wasta-logos-setup</i>.
 
-The recommended method is to install the <i>'wasta-logos-installer'</i> package."
+The recommended method is to install the <i>wasta-logos-installer</i> package."
     fi
 
     echo
@@ -279,7 +378,7 @@ The recommended method is to install the <i>'wasta-logos-installer'</i> package.
         if [ "$OUTNUM" -ne 0 ];
         then
             # some failure: exit
-            errorExit "<b>Logos installation failed!</b>\n
+            errorExit "<b><i>Logos</i> installation failed!</b>\n
 <i>Some error encountered with installation file:</i>\n
 $INSTALL_FILE"
         fi
@@ -289,23 +388,34 @@ $INSTALL_FILE"
         #   Adding sleep to see if helps
         sleep 2
 
-        # legacy: remove any "LC_ALL=C" from the desktop launcher
-        sed -i -e "s@ LC_ALL=C@@" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
-
         # point to specific version of wine to run Logos
         sed -i -e "s@ wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
+
+        # 2020-10-25: not sure why, but launcher getting created with wrong wine
+        #   reference: fix it if found
+        sed -i -e "s@ //bin/wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
 
         # Set Wine to winxp for Logos Usage
         WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp
 
+        LOGOS_DATA_FOLDER=$(echo \
+            "$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/Data/"*"/")
+
+        LOGOS_DOCS_FOLDER=$(echo \
+            "$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/Documents/"*"/")
+
         zenity --info $ZENITY_SETTINGS \
-            --title="wasta-logos-setup: Complete" \
-            --text="<b>Logos setup complete!</b>\n
-<i>Find 'Logos Bible Software' in the <u>Main Menu</u>
-under the <u>'Wine'</u> category</i>"
+            --title="wasta [Logos] Setup: Complete" \
+            --text="<b><i>Logos</i> setup complete!</b>\n
+Find <i>Logos Bible Software</i> in the <u>Main Menu</u> under the <u>Wine</u> category\n
+After logging in to activate <i>Logos</i>, if you want to copy your <i>Logos</i>
+resources from a saved location, close <i>Logos</i> and replace <u>the contents</u>
+of these folders <i>(click to open):</i>\n
+<a href='file://$LOGOS_DATA_FOLDER'>$LOGOS_DATA_FOLDER</a>\n
+<a href='file://$LOGOS_DOCS_FOLDER'>$LOGOS_DOCS_FOLDER</a>\n"
     else
         # not a valid 'logos*.msi' file: exit
-        errorExit "<b>No valid Logos-x86.msi found.</b>"
+        errorExit "<b>No valid <i>Logos-x86.msi</i> file found.</b>"
     fi
 fi
 

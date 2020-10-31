@@ -1,2 +1,4 @@
+install-files/applications                 usr/share
 install-files/bin                          usr
+install-files/icons                        usr
 wasta-logos-setup                          usr/share
