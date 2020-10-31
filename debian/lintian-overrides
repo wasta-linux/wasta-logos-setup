@@ -1,1 +1,3 @@
 wasta-logos-setup: binary-without-manpage
+wasta-logos-setup: desktop-entry-invalid-category
+wasta-logos-setup: desktop-entry-lacks-main-category
