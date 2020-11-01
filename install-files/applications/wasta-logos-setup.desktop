@@ -2,7 +2,7 @@
 Name=wasta [Logos] Setup
 Comment=Install, re-install, or update Logos using 'wine'
 Exec=wasta-logos-setup
-Terminal=false
+Terminal=true
 Icon=wasta-logos
 Type=Application
 Categories=Wine;

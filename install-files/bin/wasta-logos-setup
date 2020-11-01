@@ -110,7 +110,7 @@ You will need to accept the license agreements to proceed.\n
     zenity --question $ZENITY_SETTINGS \
         --title="wasta [Logos] Setup: MS Corefonts" \
         --text="<b>Install / Update <i>Microsoft Corefonts?</i></b>\n
-<i>This may take a few minutes and does not give any output, please be patient</i>\n"
+<i>This may take a few minutes, please be patient</i>\n"
 
     if [ "$?" -ne 0 ];
     then
@@ -144,6 +144,8 @@ You will need to accept the license agreements to proceed.\n
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing)
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi
+
+    WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
 
     cleanupPrefix
 }
@@ -267,10 +269,9 @@ DIR=/usr/share/wasta-logos-setup
 PREFIX=/home/$USER/.wine-logos
 ZENITY_SETTINGS="--height=200 --width=500 --window-icon=/usr/share/icons/hicolor/scalable/apps/wasta-logos.svg"
 
-#Cleanup Index: remove contents of BibleIndex, LibraryIndex, PersonalBookIndex and LibraryCatalog 
-
 zenity --question --title="wasta [Logos] Setup" $ZENITY_SETTINGS \
     --text="<b>Install, Update, or Repair <i>Logos</i>?</b>\n
+This process will open a <i>terminal window</i> so that you can monitor the progress of the installation.\n
 You need a <i>Logos</i> license to activate <i>Logos</i>. If you need to register,
 please visit: <a href='https://www.logos.com/register'>www.logos.com/register</a>\n"
 
@@ -429,8 +430,9 @@ $INSTALL_FILE"
         # Set Wine to winxp for Logos Usage
         WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp
 
-        LOGOS_FOLDER=$(echo \
-            "$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/")
+        WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
+
+        LOGOS_FOLDER="$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/"
 
         zenity --info $ZENITY_SETTINGS \
             --title="wasta [Logos] Setup: Complete" \

@@ -1,3 +1,9 @@
+wasta-logos-setup (1.2.2) focal; urgency=medium
+
+  * set desktop launcher to open terminal
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sun, 01 Nov 2020 15:20:13 +0300
+
 wasta-logos-setup (1.2.1) focal; urgency=medium
 
   * re-working dialogs to be more performant
