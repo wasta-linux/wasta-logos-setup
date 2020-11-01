@@ -109,7 +109,7 @@ setupPrefix () {
     zenity --question $ZENITY_SETTINGS \
         --title="wasta [Logos] Setup: MS Corefonts" \
         --text="<b>Install / Update <i>Microsoft Corefonts?</i></b>\n
-<i>This may take a few minutes, please be patient</i>\n"
+<i>This may take a few minutes and does not give any output, please be patient</i>\n"
 
     if [ "$?" -ne 0 ];
     then
