@@ -75,7 +75,8 @@ setupPrefix () {
     zenity --question $ZENITY_SETTINGS \
         --title="wasta [Logos] Setup: Install .NET" \
         --text="<b>Install / Update <i>.NET 4.0 and 4.8?</i></b>\n
-<i>This will take several minutes, please be patient</i>\n\n"
+You will need to accept the license agreements to proceed.\n
+<i>The installation will take several minutes, please be patient</i>\n\n"
 
     if [ "$?" -ne 0 ];
     then
