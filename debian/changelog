@@ -1,3 +1,9 @@
+wasta-logos-setup (1.2.1) focal; urgency=medium
+
+  * re-working dialogs to be more performant
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Sun, 01 Nov 2020 13:30:45 +0300
+
 wasta-logos-setup (1.2.0) focal; urgency=medium
 
   * re-working dialogs

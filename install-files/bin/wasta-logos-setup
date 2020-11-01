@@ -18,6 +18,7 @@
 #   2020-03-12 rik: updating logo
 #   2020-05-11 rik: adding sleep before launcher edits
 #   2020-05-18 rik: setting Downloads folder from xdg-user-dir
+#   2020-11-01 rik: refactoring dialogs for better performance
 #
 # ==============================================================================
 
@@ -48,67 +49,92 @@ setupPrefix () {
     # setup prefix
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
     #   But some users are having freezing issues so I am reverting this.
-    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | zenity $ZENITY_SETTINGS \
-        --progress --pulsate --auto-close \
-        --title="wasta [Logos] Setup: Creating Prefix" \
-        --text="Creating <i>Logos Wine Prefix</i> ... \n\n" &
-    # get zenity process id
-    PID_ZENITY=${!}
+    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
 
-    # get firstly created process id, which is running parallel to zenity
-    PID_PROCESS=$(pgrep -o -P $$)
+#| zenity $ZENITY_SETTINGS \
+#        --progress --pulsate --auto-close \
+#        --title="wasta [Logos] Setup: Creating Prefix" \
+#        --text="Creating <i>Logos Wine Prefix</i> ... \n\n" &
+#    # get zenity process id
+#    PID_ZENITY=${!}
 
-    progressCheck $PID_ZENITY $PID_PROCESS
-    if [ "$?" -eq 99 ];
-    then
-        # zenity canceled, Prefix setup didn't complete
-        # some failure: exit
-        errorExit "<b>Creation of <i>Logos Wine Prefix</i> failed!</b>"
-    fi
+#    # get firstly created process id, which is running parallel to zenity
+#    PID_PROCESS=$(pgrep -o -P $$)
+
+#    progressCheck $PID_ZENITY $PID_PROCESS
+#    if [ "$?" -eq 99 ];
+#    then
+#        # zenity canceled, Prefix setup didn't complete
+#        # some failure: exit
+#        errorExit "<b>Creation of <i>Logos Wine Prefix</i> failed!</b>"
+#    fi
 
     # 2020-10-25: -q is less stable for .NET 4.0 install, so removing: may need
     # to prompt user to guide them on what to click?
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q dotnet40 dotnet48 | zenity $ZENITY_SETTINGS \
-        --progress --pulsate --auto-close \
-        --title="wasta [Logos] Setup: Installing .NET" \
-        --text="Installing .NET 4.0 and 4.8 in the <i>Logos Wine Prefix</i> ... \n\n" &
-    # get zenity process id
-    PID_ZENITY=${!}
 
-    # get firstly created process id, which is running parallel to zenity
-    PID_PROCESS=$(pgrep -o -P $$)
+    zenity --question $ZENITY_SETTINGS \
+        --title="wasta [Logos] Setup: Install .NET" \
+        --text="<b>Install / Update <i>.NET 4.0 and 4.8?</i></b>\n
+<i>This will take several minutes, please be patient</i>\n\n"
 
-    progressCheck $PID_ZENITY $PID_PROCESS
-    if [ "$?" -eq 99 ];
+    if [ "$?" -ne 0 ];
     then
-        # zenity canceled, Prefix setup didn't complete
-        # some failure: exit
-        errorExit "<b>.NET installation failed!</b>"
+        # User didn't say 'Continue': exit
+        exit 0
     fi
 
-    sleep 2
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" dotnet48
+
+#| zenity $ZENITY_SETTINGS \
+#        --progress --pulsate --auto-close \
+#        --title="wasta [Logos] Setup: Installing .NET" \
+#        --text="Installing .NET 4.0 and 4.8 in the <i>Logos Wine Prefix</i> ... \n\n" &
+#    # get zenity process id
+#    PID_ZENITY=${!}
+
+#    # get firstly created process id, which is running parallel to zenity
+#    PID_PROCESS=$(pgrep -o -P $$)
+
+#    progressCheck $PID_ZENITY $PID_PROCESS
+#    if [ "$?" -eq 99 ];
+#    then
+#        # zenity canceled, Prefix setup didn't complete
+#        # some failure: exit
+#        errorExit "<b>.NET installation failed!</b>"
+#    fi
 
     # reboot wine
     WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
 
-    sleep 2
+    zenity --question $ZENITY_SETTINGS \
+        --title="wasta [Logos] Setup: MS Corefonts" \
+        --text="<b>Install / Update <i>Microsoft Corefonts?</i></b>\n
+<i>This may take a few minutes, please be patient</i>\n"
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q corefonts | zenity $ZENITY_SETTINGS \
-        --progress --pulsate --auto-close \
-        --title="wasta [Logos] Setup: Installing CoreFonts" \
-        --text="Installing Corefonts... \n\n" &
-    # get zenity process id
-    PID_ZENITY=${!}
-
-    # get firstly created process id, which is running parallel to zenity
-    PID_PROCESS=$(pgrep -o -P $$)
-
-    progressCheck $PID_ZENITY $PID_PROCESS
-    if [ "$?" -eq 99 ];
+    if [ "$?" -ne 0 ];
     then
-        # zenity canceled, Corefonts install didn't complete
-        errorExit "<b>Corefonts install failed!</b>"
+        # User didn't say 'Continue': exit
+        exit 0
     fi
+
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" corefonts
+
+#  zenity $ZENITY_SETTINGS \
+#        --progress --pulsate --auto-close \
+#        --title="wasta [Logos] Setup: Installing CoreFonts" \
+#        --text="Installing Corefonts... \n\n" &
+#    # get zenity process id
+#    PID_ZENITY=${!}
+
+#    # get firstly created process id, which is running parallel to zenity
+#    PID_PROCESS=$(pgrep -o -P $$)
+
+#    progressCheck $PID_ZENITY $PID_PROCESS
+#    if [ "$?" -eq 99 ];
+#    then
+#        # zenity canceled, Corefonts install didn't complete
+#        errorExit "<b>Corefonts install failed!</b>"
+#    fi
 
     # set fontsmoothing
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
@@ -312,6 +338,7 @@ The folder <u>$PREFIX</u> already exists. Do you want to
     then
         # remove PREFIX
         rm -rf $PREFIX
+        setupPrefix
     else
         # Wine PREFIX exists, ask user if they want to update or repair install
         zenity --question $ZENITY_SETTINGS \
@@ -320,8 +347,11 @@ The folder <u>$PREFIX</u> already exists. Do you want to
 The folder <u>$PREFIX</u> already exists. Do you want to
 re-run the <i>Logos</i> installer to <u>update</u> or <u>repair</u> <i>Logos?</i>\n"
 
-        if [ "$?" -eq 1 ];
+        if [ "$?" -eq 0 ];
         then
+            # ensure Prefix updated
+            setupPrefix
+        else
             # user doesn't want to update and doesn't want to re-install: exit
             exit 0
         fi
@@ -398,11 +428,8 @@ $INSTALL_FILE"
         # Set Wine to winxp for Logos Usage
         WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp
 
-        LOGOS_DATA_FOLDER=$(echo \
-            "$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/Data/"*"/")
-
-        LOGOS_DOCS_FOLDER=$(echo \
-            "$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/Documents/"*"/")
+        LOGOS_FOLDER=$(echo \
+            "$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/")
 
         zenity --info $ZENITY_SETTINGS \
             --title="wasta [Logos] Setup: Complete" \
@@ -410,9 +437,9 @@ $INSTALL_FILE"
 Find <i>Logos Bible Software</i> in the <u>Main Menu</u> under the <u>Wine</u> category\n
 After logging in to activate <i>Logos</i>, if you want to copy your <i>Logos</i>
 resources from a saved location, close <i>Logos</i> and replace <u>the contents</u>
-of these folders <i>(click to open):</i>\n
-<a href='file://$LOGOS_DATA_FOLDER'>$LOGOS_DATA_FOLDER</a>\n
-<a href='file://$LOGOS_DOCS_FOLDER'>$LOGOS_DOCS_FOLDER</a>\n"
+of the <u>Data</u>, <u>Documents</u>, and <u>Users</u> folders
+in the <u>Logos Folder</u> <i>(click to open):</i>\n
+<a href='file://$LOGOS_FOLDER'>$LOGOS_FOLDER</a>\n"
     else
         # not a valid 'logos*.msi' file: exit
         errorExit "<b>No valid <i>Logos-x86.msi</i> file found.</b>"
