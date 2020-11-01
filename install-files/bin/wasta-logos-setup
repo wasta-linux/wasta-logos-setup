@@ -104,9 +104,6 @@ You will need to accept the license agreements to proceed.\n
 #        errorExit "<b>.NET installation failed!</b>"
 #    fi
 
-    # reboot wine
-    WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
-
     zenity --question $ZENITY_SETTINGS \
         --title="wasta [Logos] Setup: MS Corefonts" \
         --text="<b>Install / Update <i>Microsoft Corefonts?</i></b>\n
@@ -144,8 +141,6 @@ You will need to accept the license agreements to proceed.\n
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing)
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi
-
-    WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
 
     cleanupPrefix
 }
