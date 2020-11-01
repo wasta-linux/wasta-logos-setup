@@ -430,8 +430,6 @@ $INSTALL_FILE"
         # Set Wine to winxp for Logos Usage
         WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp
 
-        WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
-
         LOGOS_FOLDER="$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/"
 
         zenity --info $ZENITY_SETTINGS \
