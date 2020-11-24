@@ -8,7 +8,7 @@ Homepage: https://github.com/wasta-linux/wasta-logos-setup
 
 Package: wasta-logos-setup
 Architecture: all
-Depends: cabextract, rsync, wasta-wine, wasta-winetricks, wasta-winetricks-corefonts, wasta-winetricks-dotnet40, wasta-winetricks-dotnet48, xdg-user-dirs, zenity, ${misc:Depends}
+Depends: cabextract, rsync, wasta-wine, wasta-winetricks (>= 20200412.5), wasta-winetricks-corefonts, wasta-winetricks-dotnet40, wasta-winetricks-dotnet48, xdg-user-dirs, zenity, ${misc:Depends}
 Recommends: wasta-logos-installer
 Description: Setup Logos via WINE
  Sets up Logos WINE prefix using wasta-wine, installs .NET 4.8

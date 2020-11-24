@@ -1,3 +1,10 @@
+wasta-logos-setup (1.3.0) focal; urgency=medium
+
+  * refactor dialogs
+  * save and re-link to ~/.logos-data so data not lost on reinstall
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Tue, 24 Nov 2020 10:27:10 +0300
+
 wasta-logos-setup (1.2.2) focal; urgency=medium
 
   * set desktop launcher to open terminal

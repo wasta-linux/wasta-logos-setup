@@ -19,6 +19,8 @@
 #   2020-05-11 rik: adding sleep before launcher edits
 #   2020-05-18 rik: setting Downloads folder from xdg-user-dir
 #   2020-11-01 rik: refactoring dialogs for better performance
+#   2020-11-24 rik: refactoring dialogs and using ~/.logos-data so not deleted
+#       on re-install.
 #
 # ==============================================================================
 
@@ -28,7 +30,7 @@
 if [ $(id -u) -eq 0 ]
 then
     echo "wasta-logos-setup started as root user."
-    echo "No processing done.  Exiting...."
+    echo "Restart without using 'sudo'.  Exiting...."
     exit 0
 fi
 
@@ -41,7 +43,7 @@ setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
-    rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee >(zenity \
+    rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee -a $LOG | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache... \n\n")
@@ -49,98 +51,57 @@ setupPrefix () {
     # setup prefix
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
     #   But some users are having freezing issues so I am reverting this.
-    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot
-
-#| zenity $ZENITY_SETTINGS \
-#        --progress --pulsate --auto-close \
-#        --title="wasta [Logos] Setup: Creating Prefix" \
-#        --text="Creating <i>Logos Wine Prefix</i> ... \n\n" &
-#    # get zenity process id
-#    PID_ZENITY=${!}
-
-#    # get firstly created process id, which is running parallel to zenity
-#    PID_PROCESS=$(pgrep -o -P $$)
-
-#    progressCheck $PID_ZENITY $PID_PROCESS
-#    if [ "$?" -eq 99 ];
-#    then
-#        # zenity canceled, Prefix setup didn't complete
-#        # some failure: exit
-#        errorExit "<b>Creation of <i>Logos Wine Prefix</i> failed!</b>"
-#    fi
-
-    # 2020-10-25: -q is less stable for .NET 4.0 install, so removing: may need
-    # to prompt user to guide them on what to click?
-
-    zenity --question $ZENITY_SETTINGS \
-        --title="wasta [Logos] Setup: Install .NET" \
-        --text="<b>Install / Update <i>.NET 4.0 and 4.8?</i></b>\n
-You will need to accept the license agreements to proceed.\n
-<i>The installation will take several minutes, please be patient</i>\n\n"
+    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" \
+        WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | tee -a $LOG | tee >(zenity \
+        $ZENITY_SETTINGS --progress --pulsate --auto-close \
+        --title="Creating Wine Prefix" \
+        --text="Creating Wine Prefix: $PREFIX... \n\n")
 
     if [ "$?" -ne 0 ];
     then
-        # User didn't say 'Continue': exit
-        exit 0
+         errorExit "Creating Wine Prefix failed!</b>\n"
     fi
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" dotnet48
+    # make sure residual wineprocesses clear out
+    sleep 5
 
-#| zenity $ZENITY_SETTINGS \
-#        --progress --pulsate --auto-close \
-#        --title="wasta [Logos] Setup: Installing .NET" \
-#        --text="Installing .NET 4.0 and 4.8 in the <i>Logos Wine Prefix</i> ... \n\n" &
-#    # get zenity process id
-#    PID_ZENITY=${!}
-
-#    # get firstly created process id, which is running parallel to zenity
-#    PID_PROCESS=$(pgrep -o -P $$)
-
-#    progressCheck $PID_ZENITY $PID_PROCESS
-#    if [ "$?" -eq 99 ];
-#    then
-#        # zenity canceled, Prefix setup didn't complete
-#        # some failure: exit
-#        errorExit "<b>.NET installation failed!</b>"
-#    fi
-
-    zenity --question $ZENITY_SETTINGS \
-        --title="wasta [Logos] Setup: MS Corefonts" \
-        --text="<b>Install / Update <i>Microsoft Corefonts?</i></b>\n
-<i>This may take a few minutes, please be patient</i>\n"
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
+        WINESERVER="$WINE_DIR/bin/wineserver" \
+        "$WINETRICKS_DIR/winetricks" dotnet48 | tee -a $LOG | tee >(zenity \
+        $ZENITY_SETTINGS --progress --pulsate --auto-close \
+        --title="Installing .NET" \
+        --text="Installing .NET 4.0 and 4.8 in <i>$PREFIX</i> ... \n\n")
 
     if [ "$?" -ne 0 ];
     then
-        # User didn't say 'Continue': exit
-        exit 0
+         errorExit "Installing .NET 4.0 or 4.8 failed!</b>\n"
     fi
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" corefonts
+    # make sure residual wineprocesses clear out
+    sleep 5
 
-#  zenity $ZENITY_SETTINGS \
-#        --progress --pulsate --auto-close \
-#        --title="wasta [Logos] Setup: Installing CoreFonts" \
-#        --text="Installing Corefonts... \n\n" &
-#    # get zenity process id
-#    PID_ZENITY=${!}
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
+        WINESERVER="$WINE_DIR/bin/wineserver" \
+        "$WINETRICKS_DIR/winetricks" corefonts  | tee -a $LOG | tee >(zenity \
+        $ZENITY_SETTINGS --progress --pulsate --auto-close \
+        --title="Installing Core Fonts" \
+        --text="Installing Core Fonts in <i>$PREFIX</i> ... \n\n")
 
-#    # get firstly created process id, which is running parallel to zenity
-#    PID_PROCESS=$(pgrep -o -P $$)
+    if [ "$?" -ne 0 ];
+    then
+         errorExit "Installing Core Fonts failed!</b>\n"
+    fi
 
-#    progressCheck $PID_ZENITY $PID_PROCESS
-#    if [ "$?" -eq 99 ];
-#    then
-#        # zenity canceled, Corefonts install didn't complete
-#        errorExit "<b>Corefonts install failed!</b>"
-#    fi
+    # make sure residual wineprocesses clear out
+    sleep 2
 
     # set fontsmoothing
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" settings fontsmooth=rgb
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" settings fontsmooth=rgb | tee -a $LOG 
 
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing)
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi | tee -a $LOG 
 
     cleanupPrefix
 }
@@ -155,6 +116,11 @@ errorExit () {
         --title="wasta [Logos] Setup: Error" \
         --text="$1 \n
 <i>Wasta-Logos-Setup</i> will now exit." >/dev/null 2>&1
+
+    echo | tee -a $LOG
+    echo "*** Error: $1" | tee -a $LOG
+    echo | tee -a $LOG
+
     exit 1
 }
 
@@ -169,46 +135,6 @@ cleanupPrefix () {
     # note: xargs -0 to handle null separated items
     grep -r -l --null "$PREFIX" "$HOME/.local/share/applications" \
         | xargs -0 rm >/dev/null 2>&1
-}
-
-# ------------------------------------------------------------------------------
-# Function: progressCheck
-#
-#   Check on process launched in parallel with zenity. If zenity is canceled,
-#   then kill process.
-# ------------------------------------------------------------------------------
-progressCheck () {
-    echo
-    echo "*** Watching zenity process. If it is canceled then kill PID_PROCESS: $PID_PROCESS"
-    echo
-
-    # loop to check that progress dialog has not been cancelled
-    while [ "$PID_ZENITY" != "" ]
-    do
-        # check if zenity PID is still there (dialog box still open)
-        PID_ZENITY=$(ps h -o pid --pid ${PID_ZENITY} | xargs)
-
-        # sleep for 2 second
-        sleep 2
-    done
-
-    # if other task still there, kill it
-    ps "${PID_PROCESS}"
-    if [ "$?" -eq 0 ];
-    then
-        # parallel process STILL FOUND: user canceled so kill it!
-        echo
-        echo "*** Zenity process ended (canceled) before parallel process: Killing PID_PROCESS: $PID_PROCESS"
-        echo
-        kill -9 ${PID_PROCESS}
-        return 99
-    else
-        # parallel process NOT found after zenity completed: both completed
-        echo
-        echo "*** Zenity process and parallel process both ended: success"
-        echo
-        return 0
-    fi
 }
 
 # ------------------------------------------------------------------------------
@@ -250,31 +176,41 @@ You should see a <i>Logos Indexing</i> icon in your system tray."
     exit 0
 }
 
-
 # ==============================================================================
 # Main Processing
 # ==============================================================================
 
-# directories
+# setup variables and create log
 WINE_DIR=/opt/wasta-wine
 WINETRICKS_DIR=/opt/wasta-winetricks
 INSTALLER_DIR=/opt/wasta-logos-installer
 DOWNLOAD_DIR="$(xdg-user-dir DOWNLOAD)"
 DIR=/usr/share/wasta-logos-setup
-PREFIX=/home/$USER/.wine-logos
-ZENITY_SETTINGS="--height=200 --width=500 --window-icon=/usr/share/icons/hicolor/scalable/apps/wasta-logos.svg"
+PREFIX="$HOME/.wine-logos"
+LOGOS_DATA="$HOME/.logos-data"
+LOGOS_FOLDER="$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/"
+ZENITY_SETTINGS="--height=200 --width=500 \
+    --window-icon=/usr/share/icons/hicolor/scalable/apps/wasta-logos.svg"
+
+RUN_DATE=$(date +%F)
+LOG_DIR="$HOME/.cache/wasta-logos-setup/"
+LOG="$LOG_DIR/$RUN_DATE-wasta-logos-setup.log"
+mkdir -p "$LOG_DIR"
 
 zenity --question --title="wasta [Logos] Setup" $ZENITY_SETTINGS \
-    --text="<b>Install, Update, or Repair <i>Logos</i>?</b>\n
-This process will open a <i>terminal window</i> so that you can monitor the progress of the installation.\n
+    --text="<b>Install or re-install Logos?</b>\n
 You need a <i>Logos</i> license to activate <i>Logos</i>. If you need to register,
-please visit: <a href='https://www.logos.com/register'>www.logos.com/register</a>\n"
+please visit: <a href='https://www.logos.com/register'>www.logos.com/register</a>\n
+<i>If Logos is already installed, your existing Logos data will be
+saved and re-linked to the new Logos installation</i>\n
+<i>Make sure no other WINE applications are running before continuing</i>"
 
 if [ "$?" -eq 0 ];
 then
-    echo
-    echo "wasta-logos-setup starting..."
-    echo
+    echo | tee -a $LOG
+    echo "===========================================================" | tee -a $LOG
+    echo $(date +%F-%R:%S) "wasta-logos-setup started" | tee -a $LOG
+    echo "-----------------------------------------------------------" | tee -a $LOG
 else
     # exit
     exit 0
@@ -321,125 +257,130 @@ fi
 # Setup Logos Prefix and install Logos
 # ------------------------------------------------------------------------------
 
-if [ -d "$PREFIX" ];
+mkdir -p "$LOGOS_DATA/Data" "$LOGOS_DATA/Documents" "$LOGOS_DATA/Users"
+
+if [ -d "$LOGOS_FOLDER/Data" ] && ! [ -L "$LOGOS_FOLDER/Data" ];
 then
-    # Wine PREFIX exists, ask user if they want to overwrite it or update it
-    zenity --question $ZENITY_SETTINGS \
-        --title="wasta [Logos] Setup: Delete?" \
-        --text="<b>Delete existing <i>Logos</i> installation?</b>\n
-The folder <u>$PREFIX</u> already exists. Do you want to
-<u>delete</u> it in order to <u>re-install</u> <i>Logos?</i>\n
-<i>(This could result in several GB needing to be downloaded from the internet)</i>\n"
-
-    if [ "$?" -eq 0 ];
-    then
-        # remove PREFIX
-        rm -rf $PREFIX
-        setupPrefix
-    else
-        # Wine PREFIX exists, ask user if they want to update or repair install
-        zenity --question $ZENITY_SETTINGS \
-            --title="wasta [Logos] Setup: Update?" \
-            --text="<b>Update existing <i>Logos</i> install?</b>\n
-The folder <u>$PREFIX</u> already exists. Do you want to
-re-run the <i>Logos</i> installer to <u>update</u> or <u>repair</u> <i>Logos?</i>\n"
-
-        if [ "$?" -eq 0 ];
-        then
-            # ensure Prefix updated
-            setupPrefix
-        else
-            # user doesn't want to update and doesn't want to re-install: exit
-            exit 0
-        fi
-    fi
-else
-    # No Wine PREFIX: prompt user
-    zenity --question $ZENITY_SETTINGS \
-        --title="wasta [Logos] Setup: Install?" \
-        --text="<b>Install <i>Logos?</i></b>\n
-No existing <i>Logos</i> installation found. Do you want install now?\n"
-
-    if [ "$?" -eq 0 ];
-    then
-        # User said yes: setup PREFIX
-        setupPrefix
-    else
-        # exit
-        exit 0
-    fi
+    # exists and is not symlink: move it
+    echo | tee -a $LOG
+    echo "*** Moving existing Logos Data to: $LOGOS_DATA/Data" | tee -a $LOG
+    echo | tee -a $LOG
+    mv "$LOGOS_FOLDER/Data" "$LOGOS_DATA/Data"
 fi
 
+if [ -d "$LOGOS_FOLDER/Documents" ] && ! [ -L "$LOGOS_FOLDER/Documents" ];
+then
+    # exists and is not symlink: move it
+    echo | tee -a $LOG
+    echo "*** Moving existing Logos Documents to: $LOGOS_DATA/Documents" | tee -a $LOG
+    echo | tee -a $LOG
+    mv "$LOGOS_FOLDER/Documents" "$LOGOS_DATA/Documents"
+fi
+
+if [ -d "$LOGOS_FOLDER/Users" ] && ! [ -L "$LOGOS_FOLDER/Users" ];
+then
+    # exists and is not symlink: move it
+    echo | tee -a $LOG
+    echo "*** Moving existing Logos Users to: $LOGOS_DATA/Users" | tee -a $LOG
+    echo | tee -a $LOG
+    mv "$LOGOS_FOLDER/Users" "$LOGOS_DATA/Users"
+fi
+
+# make sure any residual wine processes are not running (to prevent hanging)
+echo | tee -a $LOG
+echo "*** Making sure no residual wine processes running" | tee -a $LOG
+echo | tee -a $LOG
+
+killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
+    plugplay.exe services.exe 2>&1 | tee -a $LOG
+
 if [ -d "$PREFIX" ];
 then
-    INSTALL_FILE=""
-    if [ -e "$DOWNLOAD_DIR/Logos-x86.msi" ];
-    then
-        INSTALL_FILE="$DOWNLOAD_DIR/Logos-x86.msi"
-    elif [ -e "$INSTALLER_DIR/Logos-x86.msi" ];
-    then
-        INSTALL_FILE="$INSTALLER_DIR/Logos-x86.msi"
-    else
-        errorExit "<b>A <i>Logos</i> installer wasn't found in your <i>Downloads</i> folder
+    rm -rf $PREFIX
+fi
+
+setupPrefix
+
+INSTALL_FILE=""
+if [ -e "$DOWNLOAD_DIR/Logos-x86.msi" ];
+then
+    INSTALL_FILE="$DOWNLOAD_DIR/Logos-x86.msi"
+elif [ -e "$INSTALLER_DIR/Logos-x86.msi" ];
+then
+    INSTALL_FILE="$INSTALLER_DIR/Logos-x86.msi"
+else
+    errorExit "<b>A <i>Logos</i> installer wasn't found in your <i>Downloads</i> folder
 or from the <i>wasta-logos-installer</i> package.</b> You will need to put the
 <i>Logos-x86.msi</i> installer in one of these two locations and then
 re-run <i>wasta-logos-setup</i>.
 
 The recommended method is to install the <i>wasta-logos-installer</i> package."
-    fi
+fi
 
-    echo
-    echo "*** Logos installation file: $INSTALL_FILE"
-    echo
+echo | tee -a $LOG
+echo "*** Logos installation file: $INSTALL_FILE" | tee -a $LOG
+echo | tee -a $LOG
 
-    if [ "$INSTALL_FILE" ];
+if [ "$INSTALL_FILE" ];
+then
+    # Make Winecfg launcher available for user
+    cp $DIR/resources/wine-logos-winecfg.desktop $HOME/.local/share/applications/
+
+    # Set Wine to win7 for Logos install
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q win7 | tee -a $LOG
+
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" "$WINE_DIR/bin/msiexec" /i "$INSTALL_FILE" | tee -a $LOG
+    OUTNUM=$?
+    if [ "$OUTNUM" -ne 0 ];
     then
-        # Make Winecfg launcher available for user
-        cp $DIR/resources/wine-logos-winecfg.desktop $HOME/.local/share/applications/
-
-        # Set Wine to win7 for Logos install
-        WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q win7
-
-        WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" "$WINE_DIR/bin/msiexec" /i "$INSTALL_FILE"
-        OUTNUM=$?
-        if [ "$OUTNUM" -ne 0 ];
-        then
-            # some failure: exit
-            errorExit "<b><i>Logos</i> installation failed!</b>\n
+        # some failure: exit
+        errorExit "<b><i>Logos</i> installation failed!</b>\n
 <i>Some error encountered with installation file:</i>\n
 $INSTALL_FILE"
-        fi
-
-        # not sure why but below edits to launcher were not getting applied
-        #   with a message that the file wasn't found:
-        #   Adding sleep to see if helps
-        sleep 2
-
-        # point to specific version of wine to run Logos
-        sed -i -e "s@ wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
-
-        # 2020-10-25: not sure why, but launcher getting created with wrong wine
-        #   reference: fix it if found
-        sed -i -e "s@ //bin/wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
-
-        # Set Wine to winxp for Logos Usage
-        WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp
-
-        LOGOS_FOLDER="$HOME/.wine-logos/drive_c/users/$USER/Local Settings/Application Data/Logos/"
-
-        zenity --info $ZENITY_SETTINGS \
-            --title="wasta [Logos] Setup: Complete" \
-            --text="<b><i>Logos</i> setup complete!</b>\n
-Find <i>Logos Bible Software</i> in the <u>Main Menu</u> under the <u>Wine</u> category\n
-After logging in to activate <i>Logos</i>, if you want to copy your <i>Logos</i>
-resources from a saved location, close <i>Logos</i> and replace <u>the contents</u>
-of the <u>Data</u>, <u>Documents</u>, and <u>Users</u> folders
-in the <u>Logos Folder</u> <i>(click to open):</i>\n
-<a href='file://$LOGOS_FOLDER'>$LOGOS_FOLDER</a>\n"
-    else
-        # not a valid 'logos*.msi' file: exit
-        errorExit "<b>No valid <i>Logos-x86.msi</i> file found.</b>"
     fi
+
+    # make sure residual wineprocesses clear out
+    sleep 2
+
+    # point to specific version of wine to run Logos
+    sed -i -e "s@ wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
+
+    # 2020-10-25: not sure why, but launcher getting created with wrong wine
+    #   reference: fix it if found
+    sed -i -e "s@ //bin/wine @ $WINE_DIR/bin/wine @" $HOME/.local/share/applications/wine/Programs/Logos\ Bible\ Software.desktop
+
+    # some occasional hanging after setting to winxp, doing a wineboot
+    # WINEPREFIX=$PREFIX WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | tee -a $LOG
+
+    # Set Wine to winxp for Logos Usage
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp | tee -a $LOG
+
+    # Symlink to $LOGOS_DATA
+    rm -rf "$LOGOS_FOLDER/Data"
+    ln -s "$LOGOS_DATA/Data" "$LOGOS_FOLDER/Data"
+
+    rm -rf "$LOGOS_FOLDER/Documents"
+    ln -s "$LOGOS_DATA/Documents" "$LOGOS_FOLDER/Documents"
+
+    rm -rf "$LOGOS_FOLDER/Users"
+    ln -s "$LOGOS_DATA/Users" "$LOGOS_FOLDER/Users"
+
+    zenity --info $ZENITY_SETTINGS \
+        --title="wasta [Logos] Setup: Complete" \
+        --text="<b>Logos Setup Complete!</b>\n
+Find <i>Logos Bible Software</i> in the <u>Main Menu</u> under the <u>Wine</u> category\n
+If you want to copy your <i>Logos</i> Data from a saved location, replace
+the <u>Data</u>, <u>Documents</u>, and <u>Users</u> folders in the <u>Logos Data Folder</u>\n
+<i>(click to open):</i> <a href='file://$LOGOS_DATA'>$LOGOS_DATA</a>\n"
+else
+    # not a valid 'logos*.msi' file: exit
+    errorExit "<b>No valid <i>Logos-x86.msi</i> file found.</b>"
 fi
+
+echo | tee -a $LOG
+echo "-----------------------------------------------------------" | tee -a $LOG
+echo $(date +%F-%R:%S) "wasta-logos-setup complete" | tee -a $LOG
+echo "===========================================================" | tee -a $LOG
+echo | tee -a $LOG
 
 exit 0

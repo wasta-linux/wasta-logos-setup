@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=wasta [Logos] Setup
-Comment=Install, re-install, or update Logos using 'wine'
+Comment=Install or re-install Logos using 'Wine'
 Exec=wasta-logos-setup
-Terminal=true
+Terminal=false
 Icon=wasta-logos
 Type=Application
 Categories=Wine;
