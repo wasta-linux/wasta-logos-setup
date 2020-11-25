@@ -45,7 +45,7 @@ setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
-    rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee -a $LOG | tee >(zenity \
+    rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee -a $LOG | tee 1>(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache... \n\n")
@@ -58,38 +58,63 @@ setupPrefix () {
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
     #   But some users are having freezing issues so I am reverting this.
     WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" \
-        WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot | tee -a $LOG | tee >(zenity \
+        WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot 2>&1 | tee -a $LOG | tee 1>(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Creating Wine Prefix" \
-        --text="Creating Wine Prefix: $PREFIX... \n\n")
+        --text="Creating Wine Prefix: <i>$PREFIX</i> ... \n\n") || true;
 
     if [ "$?" -ne 0 ];
     then
-         errorExit "Creating Wine Prefix failed!</b>\n"
+         errorExit "Creating Wine Prefix failed! $? </b>\n"
     fi
 
     # make sure residual wineprocesses clear out
     sleep 5
 
     echo | tee -a $LOG
-    echo "*** Installing .NET 4.0 and 4.8 in $PREFIX" | tee -a $LOG
+    echo "*** Installing .NET 4.0 in $PREFIX" | tee -a $LOG
     echo | tee -a $LOG
 
-
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
+   WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
         WINESERVER="$WINE_DIR/bin/wineserver" \
-        "$WINETRICKS_DIR/winetricks" dotnet48 | tee -a $LOG | tee >(zenity \
+        "$WINETRICKS_DIR/winetricks" dotnet40 2>&1 | tee -a $LOG | tee 1>(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
-        --title="Installing .NET" \
-        --text="Installing .NET 4.0 and 4.8 in <i>$PREFIX</i> ... \n\n")
+        --title="Installing .NET 4.0" \
+        --text="Installing .NET 4.0 in <i>$PREFIX</i> ... \n\n") || true;
 
     if [ "$?" -ne 0 ];
     then
-         errorExit "Installing .NET 4.0 or 4.8 failed!</b>\n"
+         errorExit "Installing .NET 4.0 failed!</b>\n"
     fi
 
     # make sure residual wineprocesses clear out
     sleep 5
+
+killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
+    plugplay.exe services.exe 2>&1 | tee -a $LOG
+
+    echo | tee -a $LOG
+    echo "*** Installing .NET 4.8 in $PREFIX" | tee -a $LOG
+    echo | tee -a $LOG
+
+   WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
+        WINESERVER="$WINE_DIR/bin/wineserver" \
+        "$WINETRICKS_DIR/winetricks" dotnet48 2>&1 | tee -a $LOG | tee 1>(zenity \
+        $ZENITY_SETTINGS --progress --pulsate --auto-close \
+        --title="Installing .NET 4.8" \
+        --text="Installing .NET 4.8 in <i>$PREFIX</i>\n
+Please choose <i>'Restart Now'</i> when prompted ... \n\n") || true;
+
+    if [ "$?" -ne 0 ];
+    then
+         errorExit "Installing .NET 4.8 failed!</b>\n"
+    fi
+
+    # make sure residual wineprocesses clear out
+    sleep 5
+
+killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
+    plugplay.exe services.exe 2>&1 | tee -a $LOG
 
     echo | tee -a $LOG
     echo "*** Installing Core Fonts in $PREFIX" | tee -a $LOG
@@ -97,7 +122,7 @@ setupPrefix () {
 
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
         WINESERVER="$WINE_DIR/bin/wineserver" \
-        "$WINETRICKS_DIR/winetricks" corefonts  | tee -a $LOG | tee >(zenity \
+        "$WINETRICKS_DIR/winetricks" corefonts | tee -a $LOG | tee 1>(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Installing Core Fonts" \
         --text="Installing Core Fonts in <i>$PREFIX</i> ... \n\n")
@@ -116,7 +141,7 @@ setupPrefix () {
 
     # set fontsmoothing
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" settings fontsmooth=rgb | tee -a $LOG 
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" settings fontsmooth=rgb 2>&1 | tee -a $LOG 
 
     echo | tee -a $LOG
     echo "*** Setting ddr=gdi in $PREFIX" | tee -a $LOG
@@ -124,7 +149,7 @@ setupPrefix () {
 
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing)
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi | tee -a $LOG 
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi 2>&1 | tee -a $LOG 
 
     cleanupPrefix
 }
@@ -356,9 +381,9 @@ then
     cp $DIR/resources/wine-logos-winecfg.desktop $HOME/.local/share/applications/
 
     # Set Wine to win7 for Logos install
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q win7 | tee -a $LOG
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q win7 2>&1 | tee -a $LOG
 
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" "$WINE_DIR/bin/msiexec" /i "$INSTALL_FILE" | tee -a $LOG
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" "$WINE_DIR/bin/msiexec" /i "$INSTALL_FILE" 2>&1 | tee -a $LOG
     OUTNUM=$?
     if [ "$OUTNUM" -ne 0 ];
     then
@@ -386,7 +411,7 @@ $INSTALL_FILE"
     echo | tee -a $LOG
 
     # Set Wine to winxp for Logos Usage
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp | tee -a $LOG
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" -q winxp 2>&1 | tee -a $LOG
 
     # Symlink to $LOGOS_DATA
     rm -rf "$LOGOS_FOLDER/Data"

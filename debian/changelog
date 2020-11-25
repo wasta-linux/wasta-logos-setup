@@ -2,8 +2,9 @@ wasta-logos-setup (1.3.2) focal; urgency=medium
 
   * delete ~/.logos-data subfolder and move from ~/.wine-logos
     only IF <is a folder> AND <is not a symlink> AND <is not empty>
+  * add stderr to log and split dotnet40 and dotnet48
 
- -- Rik Shaw <rikshaw76@gmail.com>  Wed, 25 Nov 2020 16:32:40 +0300
+ -- Rik Shaw <rikshaw76@gmail.com>  Wed, 25 Nov 2020 21:17:32 +0300
 
 wasta-logos-setup (1.3.1) focal; urgency=medium
 
