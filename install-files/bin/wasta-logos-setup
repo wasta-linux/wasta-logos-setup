@@ -21,6 +21,8 @@
 #   2020-11-01 rik: refactoring dialogs for better performance
 #   2020-11-24 rik: refactoring dialogs and using ~/.logos-data so not deleted
 #       on re-install.
+#   2020-11-25 rik: delete ~/.logos-data subfolder and move from ~/.wine-logos
+#       only IF <is a folder> AND <is not a symlink> AND <is not empty>
 #
 # ==============================================================================
 
@@ -280,30 +282,36 @@ fi
 
 mkdir -p "$LOGOS_DATA/Data" "$LOGOS_DATA/Documents" "$LOGOS_DATA/Users"
 
-if [ -d "$LOGOS_FOLDER/Data" ] && ! [ -L "$LOGOS_FOLDER/Data" ];
+if [ -d "$LOGOS_FOLDER/Data" ] && ! [ -L "$LOGOS_FOLDER/Data" ] && [ -z "$(ls -A $LOGOS_FOLDER/Data)" ];
 then
-    # exists and is not symlink: move it
+    # <is a folder> AND <is not a symlink> AND <is not empty>: move it
     echo | tee -a $LOG
     echo "*** Moving existing Logos Data to: $LOGOS_DATA/Data" | tee -a $LOG
     echo | tee -a $LOG
+    # first remove folder: files in $LOGOS_FOLDER take precedence
+    rm -r "$LOGOS_DATA/Data"
     mv "$LOGOS_FOLDER/Data" "$LOGOS_DATA/Data"
 fi
 
-if [ -d "$LOGOS_FOLDER/Documents" ] && ! [ -L "$LOGOS_FOLDER/Documents" ];
+if [ -d "$LOGOS_FOLDER/Documents" ] && ! [ -L "$LOGOS_FOLDER/Documents" ] && [ -z "$(ls -A $LOGOS_FOLDER/Documents)" ];
 then
-    # exists and is not symlink: move it
+    # <is a folder> AND <is not a symlink> AND <is not empty>: move it
     echo | tee -a $LOG
     echo "*** Moving existing Logos Documents to: $LOGOS_DATA/Documents" | tee -a $LOG
     echo | tee -a $LOG
+    # first remove folder: files in $LOGOS_FOLDER take precedence
+    rm -r "$LOGOS_DATA/Documents"
     mv "$LOGOS_FOLDER/Documents" "$LOGOS_DATA/Documents"
 fi
 
-if [ -d "$LOGOS_FOLDER/Users" ] && ! [ -L "$LOGOS_FOLDER/Users" ];
+if [ -d "$LOGOS_FOLDER/Users" ] && ! [ -L "$LOGOS_FOLDER/Users" ] && [ -z "$(ls -A $LOGOS_FOLDER/Users)" ];
 then
-    # exists and is not symlink: move it
+    # <is a folder> AND <is not a symlink> AND <is not empty>: move it
     echo | tee -a $LOG
     echo "*** Moving existing Logos Users to: $LOGOS_DATA/Users" | tee -a $LOG
     echo | tee -a $LOG
+    # first remove folder: files in $LOGOS_FOLDER take precedence
+    rm -r "$LOGOS_DATA/Users"
     mv "$LOGOS_FOLDER/Users" "$LOGOS_DATA/Users"
 fi
 
