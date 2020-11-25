@@ -122,7 +122,7 @@ killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
 
     WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
         WINESERVER="$WINE_DIR/bin/wineserver" \
-        "$WINETRICKS_DIR/winetricks" corefonts | tee -a $LOG | tee 1>(zenity \
+        "$WINETRICKS_DIR/winetricks" corefonts | tee -a $LOG | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Installing Core Fonts" \
         --text="Installing Core Fonts in <i>$PREFIX</i> ... \n\n")
