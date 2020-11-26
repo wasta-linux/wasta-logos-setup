@@ -1,3 +1,11 @@
+wasta-logos-setup (1.3.3) focal; urgency=medium
+
+  * re-work sending stderr and stdout to logfile
+  * add NOTE about needing to manually kill mscorsvw.exe if
+    dontnet48 install 'hangs'
+
+ -- Rik Shaw <rikshaw76@gmail.com>  Thu, 26 Nov 2020 09:18:42 +0300
+
 wasta-logos-setup (1.3.2) focal; urgency=medium
 
   * delete ~/.logos-data subfolder and move from ~/.wine-logos

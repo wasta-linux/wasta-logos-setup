@@ -45,7 +45,7 @@ setupPrefix () {
     cleanupPrefix
 
     # copy in winetricks cache
-    rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee -a $LOG | tee 1>(zenity \
+    rsync -av $WINETRICKS_DIR/winetricks-cache/ $HOME/.cache/winetricks/ | tee -a $LOG | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Copying Winetricks Cache" \
         --text="Copying Winetricks Cache... \n\n")
@@ -57,30 +57,30 @@ setupPrefix () {
     # setup prefix
     # Note: WINEDLLOVERRIDES was added to try to prevent mono and gecko prompts.
     #   But some users are having freezing issues so I am reverting this.
-    WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" \
-        WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot 2>&1 | tee -a $LOG | tee 1>(zenity \
+    { WINEPREFIX=$PREFIX WINEARCH=win32 WINEDLLOVERRIDES="mscoree,mshtml=" \
+        WINELOADER="$WINE_DIR/bin/wine" $WINE_DIR/bin/wineboot 2>&3 | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Creating Wine Prefix" \
-        --text="Creating Wine Prefix: <i>$PREFIX</i> ... \n\n") || true;
+        --text="Creating Wine Prefix: <i>$PREFIX</i> ... \n\n\n\n"); } 3>&1 2>&1 | tee -a $LOG
 
-    if [ "$?" -ne 0 ];
-    then
-         errorExit "Creating Wine Prefix failed! $? </b>\n"
-    fi
+    #if [ "$?" -ne 0 ];
+    #then
+    #     errorExit "Creating Wine Prefix failed! $? </b>\n"
+    #fi
 
     # make sure residual wineprocesses clear out
-    sleep 5
+    sleep 2
 
     echo | tee -a $LOG
     echo "*** Installing .NET 4.0 in $PREFIX" | tee -a $LOG
     echo | tee -a $LOG
 
-   WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
+   { WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
         WINESERVER="$WINE_DIR/bin/wineserver" \
-        "$WINETRICKS_DIR/winetricks" dotnet40 2>&1 | tee -a $LOG | tee 1>(zenity \
+        "$WINETRICKS_DIR/winetricks" dotnet40 2>&3 | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Installing .NET 4.0" \
-        --text="Installing .NET 4.0 in <i>$PREFIX</i> ... \n\n") || true;
+        --text="Installing .NET 4.0 in <i>$PREFIX</i> ... \n\n\n\n"); } 3>&1 2>&1 | tee -a $LOG
 
     if [ "$?" -ne 0 ];
     then
@@ -90,20 +90,25 @@ setupPrefix () {
     # make sure residual wineprocesses clear out
     sleep 5
 
-killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
-    plugplay.exe services.exe 2>&1 | tee -a $LOG
+    # make sure any residual wine processes are not running (to prevent hanging)
+    echo | tee -a $LOG
+    echo "*** Making sure no residual wine processes running" | tee -a $LOG
+    echo | tee -a $LOG
+
+    killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
+        plugplay.exe services.exe 2>&1 | tee -a $LOG
 
     echo | tee -a $LOG
     echo "*** Installing .NET 4.8 in $PREFIX" | tee -a $LOG
     echo | tee -a $LOG
 
-   WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
+   { WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" \
         WINESERVER="$WINE_DIR/bin/wineserver" \
-        "$WINETRICKS_DIR/winetricks" dotnet48 2>&1 | tee -a $LOG | tee 1>(zenity \
+        "$WINETRICKS_DIR/winetricks" dotnet48 2>&3 | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Installing .NET 4.8" \
-        --text="Installing .NET 4.8 in <i>$PREFIX</i>\n
-Please choose <i>'Restart Now'</i> when prompted ... \n\n") || true;
+        --text="<b>Installing .NET 4.8 in <i>$PREFIX</i> ...</b>\n
+<i><b>NOTE:</b> Occasionally this process 'hangs' after completion. If, several seconds after you click 'Restart Now', this dialog does not go away, open '<b>System Monitor</b>', search for '<b>mscorsvw.exe</b>', right-click, and '<b>end</b>' those processes.\n</i>") ; } 3>&1 2>&1 | tee -a $LOG
 
     if [ "$?" -ne 0 ];
     then
@@ -113,8 +118,13 @@ Please choose <i>'Restart Now'</i> when prompted ... \n\n") || true;
     # make sure residual wineprocesses clear out
     sleep 5
 
-killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
-    plugplay.exe services.exe 2>&1 | tee -a $LOG
+    # make sure any residual wine processes are not running (to prevent hanging)
+    echo | tee -a $LOG
+    echo "*** Making sure no residual wine processes running" | tee -a $LOG
+    echo | tee -a $LOG
+
+    killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
+        plugplay.exe services.exe 2>&1 | tee -a $LOG
 
     echo | tee -a $LOG
     echo "*** Installing Core Fonts in $PREFIX" | tee -a $LOG
@@ -125,7 +135,7 @@ killall wineserver winedevice.exe mscorsvw.exe svchost.exe rpcss.exe \
         "$WINETRICKS_DIR/winetricks" corefonts | tee -a $LOG | tee >(zenity \
         $ZENITY_SETTINGS --progress --pulsate --auto-close \
         --title="Installing Core Fonts" \
-        --text="Installing Core Fonts in <i>$PREFIX</i> ... \n\n")
+        --text="Installing Core Fonts in <i>$PREFIX</i> ... \n\n\n\n")
 
     if [ "$?" -ne 0 ];
     then
