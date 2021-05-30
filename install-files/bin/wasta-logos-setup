@@ -151,7 +151,7 @@ setupPrefix () {
 
     # set fontsmoothing
     # https://wiki.archlinux.org/index.php/Wine#Enable_font_smoothing
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" settings fontsmooth=rgb 2>&1 | tee -a $LOG 
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" settings fontsmooth=rgb 2>&1 | tee -a $LOG
 
     echo | tee -a $LOG
     echo "*** Setting ddr=gdi in $PREFIX" | tee -a $LOG
@@ -159,7 +159,7 @@ setupPrefix () {
 
     #SetDirectDrawRender to GDI (solves graphical glitching of various menus,
     #   etc disappearing / reappearing)
-    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi 2>&1 | tee -a $LOG 
+    WINEPREFIX=$PREFIX WINE="$WINE_DIR/bin/wine" WINESERVER="$WINE_DIR/bin/wineserver" "$WINETRICKS_DIR/winetricks" ddr=gdi 2>&1 | tee -a $LOG
 
     cleanupPrefix
 }
@@ -317,7 +317,7 @@ fi
 
 mkdir -p "$LOGOS_DATA/Data" "$LOGOS_DATA/Documents" "$LOGOS_DATA/Users"
 
-if [ -d "$LOGOS_FOLDER/Data" ] && ! [ -L "$LOGOS_FOLDER/Data" ] && [ -z "$(ls -A $LOGOS_FOLDER/Data)" ];
+if [ -d "$LOGOS_FOLDER/Data" ] && ! [ -L "$LOGOS_FOLDER/Data" ] && [ "$(ls -A $LOGOS_FOLDER/Data)" ];
 then
     # <is a folder> AND <is not a symlink> AND <is not empty>: move it
     echo | tee -a $LOG
@@ -328,7 +328,7 @@ then
     mv "$LOGOS_FOLDER/Data" "$LOGOS_DATA/Data"
 fi
 
-if [ -d "$LOGOS_FOLDER/Documents" ] && ! [ -L "$LOGOS_FOLDER/Documents" ] && [ -z "$(ls -A $LOGOS_FOLDER/Documents)" ];
+if [ -d "$LOGOS_FOLDER/Documents" ] && ! [ -L "$LOGOS_FOLDER/Documents" ] && [ "$(ls -A $LOGOS_FOLDER/Documents)" ];
 then
     # <is a folder> AND <is not a symlink> AND <is not empty>: move it
     echo | tee -a $LOG
@@ -339,7 +339,7 @@ then
     mv "$LOGOS_FOLDER/Documents" "$LOGOS_DATA/Documents"
 fi
 
-if [ -d "$LOGOS_FOLDER/Users" ] && ! [ -L "$LOGOS_FOLDER/Users" ] && [ -z "$(ls -A $LOGOS_FOLDER/Users)" ];
+if [ -d "$LOGOS_FOLDER/Users" ] && ! [ -L "$LOGOS_FOLDER/Users" ] && [ "$(ls -A $LOGOS_FOLDER/Users)" ];
 then
     # <is a folder> AND <is not a symlink> AND <is not empty>: move it
     echo | tee -a $LOG
