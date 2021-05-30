@@ -191,7 +191,7 @@ cleanupPrefix () {
     # remove desktop entries referencing $PREFIX.
     # note: grep --null returns null separated list to handle space in filenames
     # note: xargs -0 to handle null separated items
-    grep -r -l --null "$PREFIX" "$HOME/.local/share/applications" \
+    grep -r -l --null "${PREFIX}[^6]" "$HOME/.local/share/applications" \
         | xargs -0 rm >/dev/null 2>&1
 }
 
